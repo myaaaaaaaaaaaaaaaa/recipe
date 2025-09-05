@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>材料からレシピを探そう - 冷蔵庫レシピ検索</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>🥘 冷蔵庫の材料でレシピを見つけよう</h1>
+      <p class="hero-subtitle">余っている材料を入力して、作れる料理を発見しましょう</p>
+      
+      <div class="ingredient-search-box">
+        <h2>🧅 持っている材料を入力</h2>
+        <div class="ingredient-input-area">
+          <input type="text" id="ingredient-input" placeholder="例: 玉ねぎ, 人参, 豚肉">
+          <button id="add-ingredient-btn" onclick="addIngredientTag()">追加</button>
+        </div>
+        <div id="selected-ingredients" class="ingredient-tags"></div>
+        <button id="search-recipes-btn" onclick="searchByIngredients()">この材料で作れる料理を探す</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-results-section">
+    <div class="filter-controls">
+      <div class="filter-group">
+        <label>並べ替え:</label>
+        <select id="sort-select" onchange="sortRecipes()">
+          <option value="match">材料の一致数順</option>
+          <option value="simple">材料数が少ない順</option>
+          <option value="name">料理名順</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button onclick="showAllRecipes()">全てのレシピを表示</button>
+        <button onclick="clearIngredients()">材料をクリア</button>
+      </div>
+    </div>
+    
+    <div id="results-info" class="results-info"></div>
+    <main id="recipe-container" class="recipe-grid"></main>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
