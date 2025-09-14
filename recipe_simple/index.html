@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>レシピ検索</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #444;
+    }
+
+    .search-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #ddd;
+    }
+
+    .filter-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .filter-buttons button.selected {
+      background-color: #ffcc88;
+      font-weight: bold;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+
+    #favoriteFilterBtn.selected {
+      background-color: gold;
+      color: #333;
+      font-weight: bold;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      text-align: center;
+    }
+
+    td img {
+      max-width: 100px;
+      border-radius: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .match-rate {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .missing {
+      color: red;
+      font-weight: bold;
+    }
+
+    .material.selected-material {
+      color: #0077cc;
+      font-weight: bold;
+      background-color: #e0f0ff;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    td:nth-child(6) {
+      text-align: center;
+      font-size: 1.2em;
+      color: #ff9900;
+    }
+
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .search-box {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      input[type="text"] {
+        width: 90%;
+      }
+
+      table, th, td {
+        font-size: 0.9em;
+      }
+
+      td img {
+        max-width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>レシピ検索</h1>
+
+<div class="search-box">
+  <input type="text" id="keyword" placeholder="キーワード検索">
+  <button onclick="clearFilters()">条件クリア</button>
+</div>
+
+<div class="filter-buttons" id="materialButtons">
+  <button id="favoriteFilterBtn">★ お気に入り</button>
+</div>
+
+<table id="recipeTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>料理名</th>
+      <th>材料・分量</th>
+      <th>ジャンル</th>
+      <th>画像</th>
+      <th>よく出る</th>
+      <th>一致度</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>001</td>
+      <td>
+        豚肉と人参の炒め物
+        <span class="hidden-reading">ぶたにくとにんじんのいためもの</span>
+      </td>
+      <td>
+        <span class="material">豚肉:200g</span>,
+        <span class="material">人参:1本</span>
+      </td>
+      <td>和食</td>
+      <td>
+        <img src="images/001.jpg" onerror="this.src='images/NO_NAME.jpg'">
+      </td>
+      <td>★</td>
+      <td class="match-rate"></td>
+    </tr>
+    <tr>
+      <td>002</td>
+      <td>
+        豚汁
+        <span class="hidden-reading">とんじる</span>
+      </td>
+      <td>
+        <span class="material">豚肉:150g</span>,
+        <span class="material">大根:1/4本</span>,
+        <span class="material">人参:1/2本</span>
+      </td>
+      <td>和食</td>
+      <td>
+        <img src="images/002.jpg" onerror="this.src='images/NO_NAME.jpg'">
+      </td>
+      <td></td>
+      <td class="match-rate"></td>
+    </tr>
+    <!-- さらにレシピを追加可能 -->
+  </tbody>
+</table>
+
+
+<script>
+  const selectedMaterials = new Set();
+  let favoriteFilterActive = false;
+
+  // 材料ボタン生成
+  function generateMaterialButtons() {
+    const materials = new Set();
+    document.querySelectorAll('.material').forEach(span => {
+      const name = span.textContent.split(':')[0].trim();
+      materials.add(name);
+    });
+
+    const container = document.getElementById('materialButtons');
+    materials.forEach(mat => {
+      const btn = document.createElement('button');
+      btn.textContent = mat;
+      btn.dataset.material = mat;
+      btn.onclick = () => toggleMaterial(btn, mat);
+      container.appendChild(btn);
+    });
+
+    // ★ボタンのイベント登録
+    const favBtn = document.getElementById('favoriteFilterBtn');
+    favBtn.onclick = () => {
+      favoriteFilterActive = !favoriteFilterActive;
+      favBtn.classList.toggle('selected', favoriteFilterActive);
+      filterAndSortRecipes();
+    };
+  }
+
+  // 材料選択のトグル
+  function toggleMaterial(button, mat) {
+    if (selectedMaterials.has(mat)) {
+      selectedMaterials.delete(mat);
+      button.classList.remove('selected');
+    } else {
+      selectedMaterials.add(mat);
+      button.classList.add('selected');
+    }
+    filterAndSortRecipes();
+  }
+
+  // キーワード検索
+  document.getElementById('keyword').addEventListener('input', filterAndSortRecipes);
+
+  // 条件クリア
+  function clearFilters() {
+    selectedMaterials.clear();
+    document.getElementById('keyword').value = '';
+    document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('selected'));
+    favoriteFilterActive = false;
+    document.getElementById('favoriteFilterBtn').classList.remove('selected');
+    filterAndSortRecipes();
+  }
+
+  // レシピフィルタ＋一致度計算＋並び替え
+  function filterAndSortRecipes() {
+    const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+    const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
+    const filteredRows = [];
+
+    rows.forEach(row => {
+      const name = row.cells[1].textContent.toLowerCase();
+      const reading = row.querySelector('.hidden-reading')?.textContent.toLowerCase() || '';
+      const genre = row.cells[3].textContent.toLowerCase();
+      const favorite = row.cells[5].textContent.trim();
+      const materialSpans = row.querySelectorAll('.material');
+      const materialList = Array.from(materialSpans).map(span => span.textContent.split(':')[0].trim());
+
+      // 材料一致度計算
+      const matched = materialList.filter(m => selectedMaterials.has(m));
+      const missing = Array.from(selectedMaterials).filter(m => !materialList.includes(m));
+      const matchRateCell = row.querySelector('.match-rate');
+      matchRateCell.innerHTML = selectedMaterials.size > 0
+        ? `${matched.length}/${selectedMaterials.size} (${Math.round((matched.length / selectedMaterials.size) * 100)}%)`
+        : '';
+
+      if (missing.length > 0) {
+        matchRateCell.innerHTML += `<br><span class="missing">不足: ${missing.join(', ')}</span>`;
+      }
+
+      // 材料の色分け
+		materialSpans.forEach(span => {
+		  const matName = span.textContent.split(':')[0].trim();
+		  if (selectedMaterials.has(matName)) {
+			span.classList.add('selected-material');
+			span.classList.remove('missing');
+		  } else {
+			span.classList.remove('selected-material');
+			span.classList.remove('missing'); // ← 赤表示を解除
+		  }
+		});
+
+
+      // 表示判定
+      const keywordMatch = keyword === '' || name.includes(keyword) || genre.includes(keyword) || materialList.some(m => m.includes(keyword)) || reading.includes(keyword);
+      const materialMatch = selectedMaterials.size === 0 || matched.length > 0;
+      const favoriteMatch = !favoriteFilterActive || favorite === '★';
+
+      const shouldShow = keywordMatch && materialMatch && favoriteMatch;
+      row.classList.toggle('hidden', !shouldShow);
+
+      if (shouldShow) {
+        row.dataset.matchScore = matched.length;
+        filteredRows.push(row);
+      }
+    });
+
+    // 一致度順に並び替え
+    const tbody = document.querySelector('#recipeTable tbody');
+    filteredRows.sort((a, b) => {
+      const scoreA = parseInt(a.dataset.matchScore || '0');
+      const scoreB = parseInt(b.dataset.matchScore || '0');
+      return scoreB - scoreA;
+    });
+
+    filteredRows.forEach(row => tbody.appendChild(row));
+  }
+
+  // 初期化
+  generateMaterialButtons();
+  filterAndSortRecipes();
+</script>
+
+
+
+<style>
+  /* 選択中の材料（青） */
+  .material.selected-material {
+    color: #0077cc;
+    font-weight: bold;
+    background-color: #e0f0ff;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  /* 不足している材料（赤） */
+  .material.missing {
+    color: red;
+    font-weight: bold;
+    background-color: #ffe5e5;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  /* 不足材料の一致度欄表示 */
+  .match-rate .missing {
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* ★ボタンの選択状態 */
+  #favoriteFilterBtn.selected {
+    background-color: gold;
+    color: #333;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  }
+
+  /* お気に入り列のスタイル */
+  td:nth-child(6) {
+    text-align: center;
+    font-size: 1.2em;
+    color: #ff9900;
+  }
+
+  /* レスポンシブ対応 */
+  @media screen and (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+
+    .search-box {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      width: 90%;
+    }
+
+    table, th, td {
+      font-size: 0.9em;
+    }
+
+    td img {
+      max-width: 80px;
+    }
+
+    .filter-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .filter-buttons button {
+      width: 90%;
+      margin: 4px 0;
+    }
+  }
+  
+	.hidden-reading {
+	display: none;
+	}
+
+  
+</style>
+
