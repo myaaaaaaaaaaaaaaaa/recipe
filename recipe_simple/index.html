@@ -2047,10 +2047,10 @@
         : '';
 
       if (missing.length > 0) {
-        matchRateCell.innerHTML += `<br><span class="missing">不足: ${missing.join(', ')}</span>`;
+        matchRateCell.innerHTML += `<br><span class="missing">不要: ${missing.join(', ')}</span>`;
       }
 
-      // 材料の色分け（不足材料は赤にしない、選択材料のみ青）
+      // 材料の色分け（不要材料は赤にしない、選択材料のみ青）
       materialSpans.forEach(span => {
         const matName = span.textContent.split(':')[0].trim();
         if (selectedMaterials.has(matName)) {
@@ -2296,5 +2296,6 @@
 
   
 </style>
+
 
 
