@@ -4,55 +4,111 @@
   <meta charset="UTF-8">
   <title>レシピ検索</title>
 		<div style="text-align: right;">
-			最終更新日　14:57 --2025/09/19 <br>
+			最終更新日　18:57 --2025/09/20 <br>
 			<a href="update.html">あっぷでーとないよう</a>
 		</div>
 
   <style>
-    body {
-      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-	  font-size:40px
-    }
+	 /* 全体の基本スタイル */
+	* {
+	  box-sizing: border-box;
+	}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #444;
-    }
+	body {
+	  font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+	  background-color: #f9f9f9;
+	  margin: 0;
+	  padding: 20px;
+	  color: #333;
+	  font-size: 18px; /* デフォルトはPC向けサイズ */
+	}
 
+	/* タイトル */
+	h1 {
+	  text-align: center;
+	  margin-bottom: 30px;
+	  color: #444;
+	  font-size: 2em;
+	}
+
+	/* 検索ボックスのレイアウト */
 	.search-box {
 	  display: flex;
-	  justify-content: center;
+	  flex-direction: column;
+	  align-items: center;
 	  gap: 10px;
 	  margin-bottom: 20px;
 	}
 
+	/* テキスト入力 */
 	input[type="text"] {
-	  padding: 40px; /* ← 少し大きめに */
-	  width: 1000px;   /* ← 横幅も拡張 */
+	  padding: 12px;
+	  width: 100%;
+	  max-width: 600px;
 	  border: 1px solid #ccc;
 	  border-radius: 4px;
-	  font-size: 40px; /* ← 文字サイズを追加 */
+	  font-size: 1em;
 	}
 
+	/* ボタン */
 	button {
-	  padding: 20px 24px; /* ← 高さと横幅を拡張 */
+	  padding: 10px 16px;
 	  border: none;
 	  border-radius: 4px;
 	  background-color: #eee;
 	  cursor: pointer;
 	  transition: background-color 0.2s;
-	  font-size: 18px; /* ← 文字サイズを追加 */
+	  font-size: 1em;
+	}
+
+	button:hover {
+	  background-color: #ddd;
+	}
+
+	/* 料理名の表示スタイル */
+	.recipe-name {
+	  white-space: normal;
+	  word-break: break-word;
+	  overflow-wrap: anywhere;
+	  max-width: 300px;
+	  font-size: 1em;
+	}
+
+	/* スマホ向けの調整（画面幅が600px以下） */
+	@media (max-width: 600px) {
+	  body {
+		font-size: 20px;
+	  }
+
+	  h1 {
+		font-size: 1.5em;
+	  }
+
+	  input[type="text"] {
+		padding: 20px;
+		font-size: 1.2em;
+		max-width: 90vw;
+	  }
+
+	  button {
+		padding: 16px 20px;
+		font-size: 1.1em;
+	  }
+
+	  .recipe-name {
+		max-width: 90vw;
+		font-size: 1.1em;
+	  }
+
+	  .search-box {
+		flex-direction: column;
+	  }
 	}
 
 
-    button:hover {
-      background-color: #ddd;
-    }
+
+
+
 
     .filter-buttons {
       display: flex;
@@ -151,10 +207,17 @@
 	
 	/* 料理名の幅を狭く notepad++の置換神*/
 	.recipe-name {
-	  white-space: normal;         /* ← 改行を許可 */
-	  word-break: break-word;      /* ← 長い単語でも折り返す */
-	  overflow-wrap: anywhere;     /* ← どこでも改行可能に */
-	  max-width: 200px;            /* ← デフォルト幅を抑える（必要なら調整） */
+	  white-space: normal;
+	  word-break: break-word;
+	  overflow-wrap: anywhere;
+	  max-width: 200px;
+	}
+
+	/* 画面が小さいときは max-width を広げる */
+	@media (max-width: 480px) {
+	  .recipe-name {
+		max-width: 90vw; /* 画面幅の90%まで使う */
+	  }
 	}
 
 	
@@ -174,20 +237,227 @@
 	  margin-bottom: 4px; /* お好みで余白調整 */
 	}
 
+
+	/* トップに戻るボタン */
+	#backToTop {
+	  position: fixed;
+	  bottom: 30px;
+	  right: 30px;
+	  padding: 16px 24px;     /* ← 横長にしたいならここの値を調整 */
+	  font-size: 18px;        /* ← 文字サイズを大きく */
+	  background-color: #333;
+	  color: #fff;
+	  border: none;
+	  border-radius: 0;       /* ← 角丸なし */
+	  cursor: pointer;
+	  display: none;
+	  z-index: 1000;
+	  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	  white-space: nowrap;    /* ← 改行させない！ */
+	}
+
+	/* 共通スタイル */
+	#backToTop,
+	#scrollToBottom {
+	  position: fixed;
+	  right: 30px;
+	  padding: 16px 24px;
+	  font-size: 18px;
+	  background-color: #333;
+	  color: #fff;
+	  border: none;
+	  border-radius: 0;
+	  cursor: pointer;
+	  display: none;
+	  z-index: 1000;
+	  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+	  white-space: nowrap;
+	}
+
+	/* トップへ戻るボタン（右下） */
+	#backToTop {
+	  bottom: 30px;
+	}
+
+	/* 一番下へ移動ボタン（右下・少し上） */
+	#scrollToBottom {
+	  bottom: 90px;
+	}
+
+
+	.sort-buttons button {
+	  border: 2px solid white;     /* ← 外枠を赤に */
+	  background-color: #fff;    /* ← 背景は白（任意） */
+	  color: #333;               /* ← 文字色は濃いグレー（任意） */
+	  padding: 10px 16px;
+	  border-radius: 4px;
+	  cursor: pointer;
+	  font-size: 16px;
+	  transition: border-color 0.2s;
+	}
+
+	.sort-buttons button:hover {
+	  border-color: darkred;     /* ← ホバー時に濃い赤に変化（任意） */
+	}
+
+
+
+
+
+
+  /* 選択中の材料（青） */
+  .material.selected-material {
+    color: #0077cc;
+    font-weight: bold;
+    background-color: #e0f0ff;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  /* 不足している材料（赤） */
+  .material.missing {
+    color: red;
+    font-weight: bold;
+    background-color: #ffe5e5;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  /* 不足材料の一致度欄表示 */
+  .match-rate .missing {
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* ★ボタンの選択状態 */
+  #favoriteFilterBtn.selected {
+    background-color: gold;
+    color: #333;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  }
+
+  /* お気に入り列のスタイル */
+  td:nth-child(6) {
+    text-align: center;
+    font-size: 1.2em;
+    color: #ff9900;
+  }
+  
+
+
+  /* 並べ替えボタン */
+	.sort-buttons {
+	  margin-bottom: 10px;
+	  display: flex;
+	  gap: 8px;
+	}
+
+  /* 個数の多いボタンの色変える */
+	.filter-buttons button.selected {
+	  background-color: #ffcc66;
+	  color: #333;
+	  font-weight: bold;
+	  border: 1px solid #999;
+	}
+
+  
+
+	@media screen and (max-width: 768px) {
+	  .filter-buttons {
+		justify-content: center;
+	  }
+
+	.filter-buttons button {
+	  width: 100px;              /* ← 完全固定幅 */
+	  flex: none;                /* ← 自動調整を無効化 */
+	  white-space: nowrap;       /* ← テキストの折り返し防止 */
+	  overflow: hidden;          /* ← はみ出た文字を隠す（任意） */
+	  text-overflow: ellipsis;   /* ← はみ出た文字を「…」で省略（任意） */
+	  padding: 6px 10px;
+	  margin: 4px;
+	  font-size: 0.9em;
+	  box-sizing: border-box;
+	}
+
+
+	.filter-buttons {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+	  gap: 8px;
+	  justify-content: center;
+	  margin-bottom: 20px;
+	}
+
+	.filter-buttons button {
+	  padding: 8px 12px;
+	  white-space: nowrap;
+	  border: none;
+	  border-radius: 4px;
+	  background-color: #eee;
+	  cursor: pointer;
+	  transition: background-color 0.2s;
+	}
+
+	
+
+
+    .search-box {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      width: 90%;
+    }
+
+    table, th, td {
+      font-size: 0.9em;
+    }
+
+    td img {
+      max-width: 80px;
+    }
+
+    .filter-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .filter-buttons button {
+      width: 90%;
+      margin: 4px 0;
+    }
+  }
+  
+	.hidden-reading {
+	display: none;
+	}
 	
 	
 	
 	
   </style>
+  
+  
+  
 </head>
+
+
 <body>
 
-<size = 3>
+
+
 
 <h1>レシピ検索</h1>
 
 <button id="backToTop">↑ トップへ</button>
+<button id="scrollToBottom">↓ 一番下へ</button>
 
+<div class="sort-buttons">
+  <button id="sortById">ID順</button>
+  <button id="sortByName">料理名順</button>
+</div>
 
 
 
@@ -197,12 +467,15 @@
 </div>
 
 
-<div id="sortButtons" class="sort-buttons">
-  <button onclick="setMaterialSort('name')">名前順</button>
-  <button onclick="setMaterialSort('count')">出現数順</button>
-</div>
+
 <details id="materialSection">
   <summary>材料で絞り込む</summary>
+  
+  <div id="sortButtons" class="sort-buttons">
+  <button onclick="setMaterialSort('name')">名前順</button>
+  <button onclick="setMaterialSort('count')">出現数順</button>
+  </div>
+  
   <div id="materialButtons" class="filter-buttons"></div>
 </details>
 
@@ -227,9 +500,9 @@
   </thead>
   <tbody>
 	<tr data-id="001"><td>001</td>
-<td class="recipe-name"><a href="output/recipe_001.html">生姜焼き
+		<td class="recipe-name"><a href="output/recipe_001.html">生姜焼き
 </a>
-<span class="hidden-reading">しょうがやき</span>
+		<span class="hidden-reading">しょうがやき</span>
 	  </td>
 	  <td>
 		<span class="material">しょうゆ:おおさじ3</span>
@@ -247,9 +520,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="002"><td>002</td>
-<td class="recipe-name"><a href="output/recipe_002.html">マーボー豆腐
+		<td class="recipe-name"><a href="output/recipe_002.html">マーボー豆腐
 </a>
-<span class="hidden-reading">まーぼーどうふ</span>
+		<span class="hidden-reading">まーぼーどうふ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -264,9 +537,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="003"><td>003</td>
-<td class="recipe-name"><a href="output/recipe_003.html">ロールキャベツ
+		<td class="recipe-name"><a href="output/recipe_003.html">ロールキャベツ
 </a>
-<span class="hidden-reading">ろーるきゃべつ</span>
+		<span class="hidden-reading">ろーるきゃべつ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -281,14 +554,14 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="004"><td>004</td>
-<td class="recipe-name"><a href="output/recipe_004.html">カレー
+		<td class="recipe-name"><a href="output/recipe_004.html">カレー
 </a>
-<span class="hidden-reading">かれー</span>
+		<span class="hidden-reading">かれー</span>
 	  </td>
 	  <td>
 		<span class="material">カレールゥ</span>
 		<span class="material">人参</span>
-		<span class="material">たまねぎ</span>
+		<span class="material">玉ねぎ</span>
 		<span class="material">じゃがいも</span>
 		<span class="material">豚肉</span>
 		<span class="material">水</span>
@@ -301,9 +574,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="005"><td>005</td>
-<td class="recipe-name"><a href="output/recipe_005.html">焼きそば
+		<td class="recipe-name"><a href="output/recipe_005.html">焼きそば
 </a>
-<span class="hidden-reading">やきそば</span>
+		<span class="hidden-reading">やきそば</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -319,9 +592,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="006"><td>006</td>
-<td class="recipe-name"><a href="output/recipe_006.html">グラタン
+		<td class="recipe-name"><a href="output/recipe_006.html">グラタン
 </a>
-<span class="hidden-reading">ぐらたん</span>
+		<span class="hidden-reading">ぐらたん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -337,9 +610,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="007"><td>007</td>
-<td class="recipe-name"><a href="output/recipe_007.html">かぼちゃスープ
+		<td class="recipe-name"><a href="output/recipe_007.html">かぼちゃスープ
 </a>
-<span class="hidden-reading">かぼちゃすーぷ</span>
+		<span class="hidden-reading">かぼちゃすーぷ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -354,9 +627,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="008"><td>008</td>
-<td class="recipe-name"><a href="output/recipe_008.html">回鍋肉（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_008.html">回鍋肉（クックドゥー）
 </a>
-<span class="hidden-reading">ほいこーろー</span>
+		<span class="hidden-reading">ほいこーろー</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -371,14 +644,14 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="009"><td>009</td>
-<td class="recipe-name"><a href="output/recipe_009.html">シチュー
+		<td class="recipe-name"><a href="output/recipe_009.html">シチュー
 </a>
-<span class="hidden-reading">しちゅー</span>
+		<span class="hidden-reading">しちゅー</span>
 	  </td>
 	  <td>
 		<span class="material">シチュールゥ</span>
 		<span class="material">人参</span>
-		<span class="material">たまねぎ</span>
+		<span class="material">玉ねぎ</span>
 		<span class="material">じゃがいも</span>
 		<span class="material">鶏肉</span>
 		<span class="material">水</span>
@@ -391,9 +664,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="010"><td>010</td>
-<td class="recipe-name"><a href="output/recipe_010.html">野菜肉炒め
+		<td class="recipe-name"><a href="output/recipe_010.html">野菜肉炒め
 </a>
-<span class="hidden-reading">やさいにくいため</span>
+		<span class="hidden-reading">やさいにくいため</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -411,9 +684,9 @@
 
 
 	<tr data-id="011"><td>011</td>
-<td class="recipe-name"><a href="output/recipe_011.html">肉じゃが
+		<td class="recipe-name"><a href="output/recipe_011.html">肉じゃが
 </a>
-<span class="hidden-reading">にくじゃが</span>
+		<span class="hidden-reading">にくじゃが</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -429,9 +702,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="012"><td>012</td>
-<td class="recipe-name"><a href="output/recipe_012.html">つみれとキャベツのコンソメ煮
+		<td class="recipe-name"><a href="output/recipe_012.html">つみれとキャベツのコンソメ煮
 </a>
-<span class="hidden-reading">つみれときゃべつのこんそめに</span>
+		<span class="hidden-reading">つみれときゃべつのこんそめに</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -446,9 +719,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="013"><td>013</td>
-<td class="recipe-name"><a href="output/recipe_013.html">特製からあげ
+		<td class="recipe-name"><a href="output/recipe_013.html">特製からあげ
 </a>
-<span class="hidden-reading">とくせいからあげ</span>
+		<span class="hidden-reading">とくせいからあげ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -464,9 +737,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="014"><td>014</td>
-<td class="recipe-name"><a href="output/recipe_014.html">特製オムライス（トリ肉など具多め）
+		<td class="recipe-name"><a href="output/recipe_014.html">特製オムライス（トリ肉など具多め）
 </a>
-<span class="hidden-reading">とくせいおむらいす</span>
+		<span class="hidden-reading">とくせいおむらいす</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -482,9 +755,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="015"><td>015</td>
-<td class="recipe-name"><a href="output/recipe_015.html">青椒肉絲（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_015.html">青椒肉絲（クックドゥー）
 </a>
-<span class="hidden-reading">ちんじゃおろーすー</span>
+		<span class="hidden-reading">ちんじゃおろーすー</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -499,9 +772,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="016"><td>016</td>
-<td class="recipe-name"><a href="output/recipe_016.html">チャーハン
+		<td class="recipe-name"><a href="output/recipe_016.html">チャーハン
 </a>
-<span class="hidden-reading">ちゃーはん</span>
+		<span class="hidden-reading">ちゃーはん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -517,9 +790,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="017"><td>017</td>
-<td class="recipe-name"><a href="output/recipe_017.html">なっとうチャーハン
+		<td class="recipe-name"><a href="output/recipe_017.html">なっとうチャーハン
 </a>
-<span class="hidden-reading">なっとうちゃーはん</span>
+		<span class="hidden-reading">なっとうちゃーはん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -535,9 +808,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="018"><td>018</td>
-<td class="recipe-name"><a href="output/recipe_018.html">親子丼
+		<td class="recipe-name"><a href="output/recipe_018.html">親子丼
 </a>
-<span class="hidden-reading">おやこどん</span>
+		<span class="hidden-reading">おやこどん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -553,9 +826,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="019"><td>019</td>
-<td class="recipe-name"><a href="output/recipe_019.html">サラダ
+		<td class="recipe-name"><a href="output/recipe_019.html">サラダ
 </a>
-<span class="hidden-reading">さらだ</span>
+		<span class="hidden-reading">さらだ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -571,9 +844,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="020"><td>020</td>
-<td class="recipe-name"><a href="output/recipe_020.html">みそ汁（なめこ＆とうふ）
+		<td class="recipe-name"><a href="output/recipe_020.html">みそ汁（なめこ＆とうふ）
 </a>
-<span class="hidden-reading">みそしる（なめこととうふ）</span>
+		<span class="hidden-reading">みそしる（なめこととうふ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -591,9 +864,9 @@
 
 
 	<tr data-id="021"><td>021</td>
-<td class="recipe-name"><a href="output/recipe_021.html">みそ汁（大根＆とうふ）
+		<td class="recipe-name"><a href="output/recipe_021.html">みそ汁（大根＆とうふ）
 </a>
-<span class="hidden-reading">みそしる（だいこんととうふ）</span>
+		<span class="hidden-reading">みそしる（だいこんととうふ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -609,9 +882,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="022"><td>022</td>
-<td class="recipe-name"><a href="output/recipe_022.html">みそ汁（キャベツ、ニンジン）
+		<td class="recipe-name"><a href="output/recipe_022.html">みそ汁（キャベツ、ニンジン）
 </a>
-<span class="hidden-reading">みそしる（きゃべつ、にんじん）</span>
+		<span class="hidden-reading">みそしる（きゃべつ、にんじん）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -627,9 +900,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="023"><td>023</td>
-<td class="recipe-name"><a href="output/recipe_023.html">みそ汁（じゃがいも）
+		<td class="recipe-name"><a href="output/recipe_023.html">みそ汁（じゃがいも）
 </a>
-<span class="hidden-reading">みそしる（じゃがいも）</span>
+		<span class="hidden-reading">みそしる（じゃがいも）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -644,9 +917,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="024"><td>024</td>
-<td class="recipe-name"><a href="output/recipe_024.html">みそ汁（わかめ、とうふ）
+		<td class="recipe-name"><a href="output/recipe_024.html">みそ汁（わかめ、とうふ）
 </a>
-<span class="hidden-reading">みそしる（わかめ、とうふ）</span>
+		<span class="hidden-reading">みそしる（わかめ、とうふ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -662,9 +935,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="025"><td>025</td>
-<td class="recipe-name"><a href="output/recipe_025.html">みそ汁（玉ネギ、じゃがいも）
+		<td class="recipe-name"><a href="output/recipe_025.html">みそ汁（玉ネギ、じゃがいも）
 </a>
-<span class="hidden-reading">みそしる（たまねぎ、じゃがいも）</span>
+		<span class="hidden-reading">みそしる（玉ねぎ、じゃがいも）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -680,9 +953,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="026"><td>026</td>
-<td class="recipe-name"><a href="output/recipe_026.html">みそ汁（小松菜、大根、豆？）
+		<td class="recipe-name"><a href="output/recipe_026.html">みそ汁（小松菜、大根、豆？）
 </a>
-<span class="hidden-reading">みそしる（こまつな、だいこん、まめ）</span>
+		<span class="hidden-reading">みそしる（こまつな、だいこん、まめ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -699,9 +972,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="027"><td>027</td>
-<td class="recipe-name"><a href="output/recipe_027.html">みそ汁（たまご、大根、玉ネギ、ジャガイモ、油あげ）
+		<td class="recipe-name"><a href="output/recipe_027.html">みそ汁（たまご、大根、玉ネギ、ジャガイモ、油あげ）
 </a>
-<span class="hidden-reading">みそしる（たまご、だいこん、たまねぎ、じゃがいも、あぶらあげ）</span>
+		<span class="hidden-reading">みそしる（たまご、だいこん、玉ねぎ、じゃがいも、あぶらあげ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -720,9 +993,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="028"><td>028</td>
-<td class="recipe-name"><a href="output/recipe_028.html">ささみでチーズパン粉焼き（フライ）
+		<td class="recipe-name"><a href="output/recipe_028.html">ささみでチーズパン粉焼き（フライ）
 </a>
-<span class="hidden-reading">ささみでちーずぱんこやき</span>
+		<span class="hidden-reading">ささみでちーずぱんこやき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -738,9 +1011,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="029"><td>029</td>
-<td class="recipe-name"><a href="output/recipe_029.html">八宝菜（ブタ肉）（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_029.html">八宝菜（ブタ肉）（クックドゥー）
 </a>
-<span class="hidden-reading">はっぽうさい（ぶたにく）</span>
+		<span class="hidden-reading">はっぽうさい（ぶたにく）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -756,9 +1029,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="030"><td>030</td>
-<td class="recipe-name"><a href="output/recipe_030.html">塩だれ回鍋肉（サマーバージョン？？）丸美屋？？
+		<td class="recipe-name"><a href="output/recipe_030.html">塩だれ回鍋肉（サマーバージョン？？）丸美屋？？
 </a>
-<span class="hidden-reading">しおだれほいこーろー</span>
+		<span class="hidden-reading">しおだれほいこーろー</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -776,9 +1049,9 @@
 
 
 	<tr data-id="031"><td>031</td>
-<td class="recipe-name"><a href="output/recipe_031.html">ブタ肉だいこん（すきやき風味）（クックドゥー？）
+		<td class="recipe-name"><a href="output/recipe_031.html">ブタ肉だいこん（すきやき風味）（クックドゥー？）
 </a>
-<span class="hidden-reading">ぶたにくだいこん（すきやきふうみ）</span>
+		<span class="hidden-reading">ぶたにくだいこん（すきやきふうみ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -793,9 +1066,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="032"><td>032</td>
-<td class="recipe-name"><a href="output/recipe_032.html">白菜のクリーム煮
+		<td class="recipe-name"><a href="output/recipe_032.html">白菜のクリーム煮
 </a>
-<span class="hidden-reading">はくさいのくりーむに</span>
+		<span class="hidden-reading">はくさいのくりーむに</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -811,9 +1084,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="033"><td>033</td>
-<td class="recipe-name"><a href="output/recipe_033.html">冷しゃぶ
+		<td class="recipe-name"><a href="output/recipe_033.html">冷しゃぶ
 </a>
-<span class="hidden-reading">れいしゃぶ</span>
+		<span class="hidden-reading">れいしゃぶ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -828,9 +1101,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="034"><td>034</td>
-<td class="recipe-name"><a href="output/recipe_034.html">かぼちゃコロッケ（手作り）
+		<td class="recipe-name"><a href="output/recipe_034.html">かぼちゃコロッケ（手作り）
 </a>
-<span class="hidden-reading">かぼちゃころっけ</span>
+		<span class="hidden-reading">かぼちゃころっけ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -846,9 +1119,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="035"><td>035</td>
-<td class="recipe-name"><a href="output/recipe_035.html">ハヤシライス
+		<td class="recipe-name"><a href="output/recipe_035.html">ハヤシライス
 </a>
-<span class="hidden-reading">はやしらいす</span>
+		<span class="hidden-reading">はやしらいす</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -864,9 +1137,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="036"><td>036</td>
-<td class="recipe-name"><a href="output/recipe_036.html">なべ
+		<td class="recipe-name"><a href="output/recipe_036.html">なべ
 </a>
-<span class="hidden-reading">なべ</span>
+		<span class="hidden-reading">なべ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -882,9 +1155,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="037"><td>037</td>
-<td class="recipe-name"><a href="output/recipe_037.html">マーボーナス（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_037.html">マーボーナス（クックドゥー）
 </a>
-<span class="hidden-reading">まーぼーなす</span>
+		<span class="hidden-reading">まーぼーなす</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -899,9 +1172,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="038"><td>038</td>
-<td class="recipe-name"><a href="output/recipe_038.html">とりにくガリバタチキン（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_038.html">とりにくガリバタチキン（クックドゥー）
 </a>
-<span class="hidden-reading">とりにくがりばたちきん</span>
+		<span class="hidden-reading">とりにくがりばたちきん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -916,9 +1189,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="039"><td>039</td>
-<td class="recipe-name"><a href="output/recipe_039.html">海鮮あんかけ（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_039.html">海鮮あんかけ（クックドゥー）
 </a>
-<span class="hidden-reading">かいせんあんかけ</span>
+		<span class="hidden-reading">かいせんあんかけ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -934,9 +1207,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="040"><td>040</td>
-<td class="recipe-name"><a href="output/recipe_040.html">うま塩海老＆いか、ブロッコリー、なす＆ぶた肉
+		<td class="recipe-name"><a href="output/recipe_040.html">うま塩海老＆いか、ブロッコリー、なす＆ぶた肉
 </a>
-<span class="hidden-reading">うましおえびあんどいか、ぶろっこりー、なすあんどぶたにく</span>
+		<span class="hidden-reading">うましおえびあんどいか、ぶろっこりー、なすあんどぶたにく</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -955,9 +1228,9 @@
 
 
 	<tr data-id="041"><td>041</td>
-<td class="recipe-name"><a href="output/recipe_041.html">ブタ肉×白菜いため煮
+		<td class="recipe-name"><a href="output/recipe_041.html">ブタ肉×白菜いため煮
 </a>
-<span class="hidden-reading">ぶたにくはくさいいために</span>
+		<span class="hidden-reading">ぶたにくはくさいいために</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -973,9 +1246,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="042"><td>042</td>
-<td class="recipe-name"><a href="output/recipe_042.html">とんかつ（手作り）
+		<td class="recipe-name"><a href="output/recipe_042.html">とんかつ（手作り）
 </a>
-<span class="hidden-reading">とんかつ</span>
+		<span class="hidden-reading">とんかつ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -991,9 +1264,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="043"><td>043</td>
-<td class="recipe-name"><a href="output/recipe_043.html">あつあげほろ煮
+		<td class="recipe-name"><a href="output/recipe_043.html">あつあげほろ煮
 </a>
-<span class="hidden-reading">あつあげほろに</span>
+		<span class="hidden-reading">あつあげほろに</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1009,9 +1282,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="044"><td>044</td>
-<td class="recipe-name"><a href="output/recipe_044.html">しゃけのムニエル
+		<td class="recipe-name"><a href="output/recipe_044.html">しゃけのムニエル
 </a>
-<span class="hidden-reading">しゃけのむにえる</span>
+		<span class="hidden-reading">しゃけのむにえる</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1027,9 +1300,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="045"><td>045</td>
-<td class="recipe-name"><a href="output/recipe_045.html">すぶた（クックドゥー）
+		<td class="recipe-name"><a href="output/recipe_045.html">すぶた（クックドゥー）
 </a>
-<span class="hidden-reading">すぶた</span>
+		<span class="hidden-reading">すぶた</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1046,9 +1319,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="046"><td>046</td>
-<td class="recipe-name"><a href="output/recipe_046.html">なすのあげびたし
+		<td class="recipe-name"><a href="output/recipe_046.html">なすのあげびたし
 </a>
-<span class="hidden-reading">なすのあげびたし</span>
+		<span class="hidden-reading">なすのあげびたし</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1064,9 +1337,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="047"><td>047</td>
-<td class="recipe-name"><a href="output/recipe_047.html">冷やし中華
+		<td class="recipe-name"><a href="output/recipe_047.html">冷やし中華
 </a>
-<span class="hidden-reading">ひやしちゅうか</span>
+		<span class="hidden-reading">ひやしちゅうか</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1082,9 +1355,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="048"><td>048</td>
-<td class="recipe-name"><a href="output/recipe_048.html">ラーメン
+		<td class="recipe-name"><a href="output/recipe_048.html">ラーメン
 </a>
-<span class="hidden-reading">らーめん</span>
+		<span class="hidden-reading">らーめん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1100,9 +1373,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="049"><td>049</td>
-<td class="recipe-name"><a href="output/recipe_049.html">たまごとじうどん
+		<td class="recipe-name"><a href="output/recipe_049.html">たまごとじうどん
 </a>
-<span class="hidden-reading">たまごとじうどん</span>
+		<span class="hidden-reading">たまごとじうどん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1118,9 +1391,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="050"><td>050</td>
-<td class="recipe-name"><a href="output/recipe_050.html">たきこみごはん（くり、とりそぼろ、さつまいも など）
+		<td class="recipe-name"><a href="output/recipe_050.html">たきこみごはん（くり、とりそぼろ、さつまいも など）
 </a>
-<span class="hidden-reading">たきこみごはん</span>
+		<span class="hidden-reading">たきこみごはん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1138,9 +1411,9 @@
 
 
 	<tr data-id="051"><td>051</td>
-<td class="recipe-name"><a href="output/recipe_051.html">レバニラ（卵）いため（しょうゆあじ）
+		<td class="recipe-name"><a href="output/recipe_051.html">レバニラ（卵）いため（しょうゆあじ）
 </a>
-<span class="hidden-reading">ればにら（たまご）いため（しょうゆあじ）</span>
+		<span class="hidden-reading">ればにら（たまご）いため（しょうゆあじ）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1156,9 +1429,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="052"><td>052</td>
-<td class="recipe-name"><a href="output/recipe_052.html">ハンバーグ（手作り）
+		<td class="recipe-name"><a href="output/recipe_052.html">ハンバーグ（手作り）
 </a>
-<span class="hidden-reading">はんばーぐ</span>
+		<span class="hidden-reading">はんばーぐ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1174,9 +1447,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="053"><td>053</td>
-<td class="recipe-name"><a href="output/recipe_053.html">焼肉（タレはエバラ甘口）
+		<td class="recipe-name"><a href="output/recipe_053.html">焼肉（タレはエバラ甘口）
 </a>
-<span class="hidden-reading">やきにく（たれはえばらあまくち）</span>
+		<span class="hidden-reading">やきにく（たれはえばらあまくち）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1191,9 +1464,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="054"><td>054</td>
-<td class="recipe-name"><a href="output/recipe_054.html">チキン南ばん
+		<td class="recipe-name"><a href="output/recipe_054.html">チキン南ばん
 </a>
-<span class="hidden-reading">ちきんなんばん</span>
+		<span class="hidden-reading">ちきんなんばん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1209,9 +1482,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="055"><td>055</td>
-<td class="recipe-name"><a href="output/recipe_055.html">ぶたたまどん（他人どん）
+		<td class="recipe-name"><a href="output/recipe_055.html">ぶたたまどん（他人どん）
 </a>
-<span class="hidden-reading">ぶたたまどん（たにんどん）</span>
+		<span class="hidden-reading">ぶたたまどん（たにんどん）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1227,9 +1500,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="056"><td>056</td>
-<td class="recipe-name"><a href="output/recipe_056.html">フライドチキン
+		<td class="recipe-name"><a href="output/recipe_056.html">フライドチキン
 </a>
-<span class="hidden-reading">ふらいどちきん</span>
+		<span class="hidden-reading">ふらいどちきん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1245,9 +1518,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="057"><td>057</td>
-<td class="recipe-name"><a href="output/recipe_057.html">すきやき（牛肉、しらたき、しいたけ、焼きどうふ、人参、ねぎ）
+		<td class="recipe-name"><a href="output/recipe_057.html">すきやき（牛肉、しらたき、しいたけ、焼きどうふ、人参、ねぎ）
 </a>
-<span class="hidden-reading">すきやき</span>
+		<span class="hidden-reading">すきやき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1265,9 +1538,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="058"><td>058</td>
-<td class="recipe-name"><a href="output/recipe_058.html">ぶり大根
+		<td class="recipe-name"><a href="output/recipe_058.html">ぶり大根
 </a>
-<span class="hidden-reading">ぶりだいこん</span>
+		<span class="hidden-reading">ぶりだいこん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1283,9 +1556,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="059"><td>059</td>
-<td class="recipe-name"><a href="output/recipe_059.html">天プラ（さつまいも、かぼちゃ、まいたけ、れんこん、緑のやさい、かきあげ）
+		<td class="recipe-name"><a href="output/recipe_059.html">天プラ（さつまいも、かぼちゃ、まいたけ、れんこん、緑のやさい、かきあげ）
 </a>
-<span class="hidden-reading">てんぷら</span>
+		<span class="hidden-reading">てんぷら</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1303,9 +1576,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="060"><td>060</td>
-<td class="recipe-name"><a href="output/recipe_060.html">パスタ（ペペロンチーノ、ナポリタン、カルボナーラ など）
+		<td class="recipe-name"><a href="output/recipe_060.html">パスタ（ペペロンチーノ、ナポリタン、カルボナーラ など）
 </a>
-<span class="hidden-reading">ぱすた</span>
+		<span class="hidden-reading">ぱすた</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1323,9 +1596,9 @@
 
 
 	<tr data-id="061"><td>061</td>
-<td class="recipe-name"><a href="output/recipe_061.html">マカロニグラタン
+		<td class="recipe-name"><a href="output/recipe_061.html">マカロニグラタン
 </a>
-<span class="hidden-reading">まかろにぐらたん</span>
+		<span class="hidden-reading">まかろにぐらたん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1341,9 +1614,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="062"><td>062</td>
-<td class="recipe-name"><a href="output/recipe_062.html">タラのにつけ
+		<td class="recipe-name"><a href="output/recipe_062.html">タラのにつけ
 </a>
-<span class="hidden-reading">たらのにつけ</span>
+		<span class="hidden-reading">たらのにつけ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1359,9 +1632,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="063"><td>063</td>
-<td class="recipe-name"><a href="output/recipe_063.html">おぞうに
+		<td class="recipe-name"><a href="output/recipe_063.html">おぞうに
 </a>
-<span class="hidden-reading">おぞうに</span>
+		<span class="hidden-reading">おぞうに</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1378,9 +1651,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="064"><td>064</td>
-<td class="recipe-name"><a href="output/recipe_064.html">魚（ほっけ、カレイ、さば（みそ煮orそのまま）、しゃけ（焼くorホイルむし（やさいのせ））、タラ、サンマ など）
+		<td class="recipe-name"><a href="output/recipe_064.html">魚（ほっけ、カレイ、さば（みそ煮orそのまま）、しゃけ（焼くorホイルむし（やさいのせ））、タラ、サンマ など）
 </a>
-<span class="hidden-reading">さかな（ほっけ、かれい、さば、しゃけ、たら、さんま）</span>
+		<span class="hidden-reading">さかな（ほっけ、かれい、さば、しゃけ、たら、さんま）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1395,9 +1668,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="065"><td>065</td>
-<td class="recipe-name"><a href="output/recipe_065.html">とんどん（ぶた肉の）
+		<td class="recipe-name"><a href="output/recipe_065.html">とんどん（ぶた肉の）
 </a>
-<span class="hidden-reading">とんどん</span>
+		<span class="hidden-reading">とんどん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1413,9 +1686,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="066"><td>066</td>
-<td class="recipe-name"><a href="output/recipe_066.html">がんも焼（チーズのり）
+		<td class="recipe-name"><a href="output/recipe_066.html">がんも焼（チーズのり）
 </a>
-<span class="hidden-reading">がんもやき（ちーずのり）</span>
+		<span class="hidden-reading">がんもやき（ちーずのり）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1430,9 +1703,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="067"><td>067</td>
-<td class="recipe-name"><a href="output/recipe_067.html">ちくわチーズのり焼き
+		<td class="recipe-name"><a href="output/recipe_067.html">ちくわチーズのり焼き
 </a>
-<span class="hidden-reading">ちくわちーずのりやき</span>
+		<span class="hidden-reading">ちくわちーずのりやき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1447,9 +1720,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="068"><td>068</td>
-<td class="recipe-name"><a href="output/recipe_068.html">とりむね肉（てりやき＋目玉やき）
+		<td class="recipe-name"><a href="output/recipe_068.html">とりむね肉（てりやき＋目玉やき）
 </a>
-<span class="hidden-reading">とりむねにく（てりやき＋めだまやき）</span>
+		<span class="hidden-reading">とりむねにく（てりやき＋めだまやき）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1465,9 +1738,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="069"><td>069</td>
-<td class="recipe-name"><a href="output/recipe_069.html">タラのにつけ（重複）
+		<td class="recipe-name"><a href="output/recipe_069.html">タラのにつけ（重複）
 </a>
-<span class="hidden-reading">たらのにつけ</span>
+		<span class="hidden-reading">たらのにつけ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1483,9 +1756,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="070"><td>070</td>
-<td class="recipe-name"><a href="output/recipe_070.html">おぞうに（重複）
+		<td class="recipe-name"><a href="output/recipe_070.html">おぞうに（重複）
 </a>
-<span class="hidden-reading">おぞうに</span>
+		<span class="hidden-reading">おぞうに</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1504,9 +1777,9 @@
 
 
 	<tr data-id="071"><td>071</td>
-<td class="recipe-name"><a href="output/recipe_071.html">大根とあつあげブロッコリーのにもの
+		<td class="recipe-name"><a href="output/recipe_071.html">大根とあつあげブロッコリーのにもの
 </a>
-<span class="hidden-reading">だいこんとあつあげぶろっこりーのにもの</span>
+		<span class="hidden-reading">だいこんとあつあげぶろっこりーのにもの</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1522,9 +1795,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="072"><td>072</td>
-<td class="recipe-name"><a href="output/recipe_072.html">ぬかじき煮つけ（エリンギ、エノキ）
+		<td class="recipe-name"><a href="output/recipe_072.html">ぬかじき煮つけ（エリンギ、エノキ）
 </a>
-<span class="hidden-reading">ぬかじきにつけ（えりんぎ、えのき）</span>
+		<span class="hidden-reading">ぬかじきにつけ（えりんぎ、えのき）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1540,9 +1813,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="073"><td>073</td>
-<td class="recipe-name"><a href="output/recipe_073.html">カレイの煮つけ
+		<td class="recipe-name"><a href="output/recipe_073.html">カレイの煮つけ
 </a>
-<span class="hidden-reading">かれいのにつけ</span>
+		<span class="hidden-reading">かれいのにつけ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1558,9 +1831,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="074"><td>074</td>
-<td class="recipe-name"><a href="output/recipe_074.html">厚揚げ大根いんげんにもの
+		<td class="recipe-name"><a href="output/recipe_074.html">厚揚げ大根いんげんにもの
 </a>
-<span class="hidden-reading">あつあげだいこんいんげんにもの</span>
+		<span class="hidden-reading">あつあげだいこんいんげんにもの</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1576,9 +1849,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="075"><td>075</td>
-<td class="recipe-name"><a href="output/recipe_075.html">玉子玉ねぎやき
+		<td class="recipe-name"><a href="output/recipe_075.html">玉子玉ねぎやき
 </a>
-<span class="hidden-reading">たまごたまねぎやき</span>
+		<span class="hidden-reading">たまご玉ねぎやき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1593,9 +1866,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="076"><td>076</td>
-<td class="recipe-name"><a href="output/recipe_076.html">ぎょうざのかわつつみ（もち、スライスチーズ、のり）
+		<td class="recipe-name"><a href="output/recipe_076.html">ぎょうざのかわつつみ（もち、スライスチーズ、のり）
 </a>
-<span class="hidden-reading">ぎょうざのかわつつみ</span>
+		<span class="hidden-reading">ぎょうざのかわつつみ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1611,9 +1884,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="077"><td>077</td>
-<td class="recipe-name"><a href="output/recipe_077.html">はるまき（手作り）
+		<td class="recipe-name"><a href="output/recipe_077.html">はるまき（手作り）
 </a>
-<span class="hidden-reading">はるまき</span>
+		<span class="hidden-reading">はるまき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1629,9 +1902,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="078"><td>078</td>
-<td class="recipe-name"><a href="output/recipe_078.html">いもっち（じゃがいも、牛乳、チーズ、しょうゆ、さとう、みりん、かたくりこ）
+		<td class="recipe-name"><a href="output/recipe_078.html">いもっち（じゃがいも、牛乳、チーズ、しょうゆ、さとう、みりん、かたくりこ）
 </a>
-<span class="hidden-reading">いもっち</span>
+		<span class="hidden-reading">いもっち</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1650,9 +1923,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="079"><td>079</td>
-<td class="recipe-name"><a href="output/recipe_079.html">こうやどうふ
+		<td class="recipe-name"><a href="output/recipe_079.html">こうやどうふ
 </a>
-<span class="hidden-reading">こうやどうふ</span>
+		<span class="hidden-reading">こうやどうふ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1668,9 +1941,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="080"><td>080</td>
-<td class="recipe-name"><a href="output/recipe_080.html">コンソメスープ（ささみ、キャベツ、ニンジン、さつまいも、玉ねぎ）
+		<td class="recipe-name"><a href="output/recipe_080.html">コンソメスープ（ささみ、キャベツ、ニンジン、さつまいも、玉ねぎ）
 </a>
-<span class="hidden-reading">こんそめすーぷ</span>
+		<span class="hidden-reading">こんそめすーぷ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1690,9 +1963,9 @@
 
 
 	<tr data-id="081"><td>081</td>
-<td class="recipe-name"><a href="output/recipe_081.html">ハッシュポテト（じゃがいも、ハム、チーズ、かたくりこ）
+		<td class="recipe-name"><a href="output/recipe_081.html">ハッシュポテト（じゃがいも、ハム、チーズ、かたくりこ）
 </a>
-<span class="hidden-reading">はっしゅぽてと</span>
+		<span class="hidden-reading">はっしゅぽてと</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1708,9 +1981,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="082"><td>082</td>
-<td class="recipe-name"><a href="output/recipe_082.html">油林ちー（長ネギ、胸肉大×２切）
+		<td class="recipe-name"><a href="output/recipe_082.html">油林ちー（長ネギ、胸肉大×２切）
 </a>
-<span class="hidden-reading">ゆーりんちー</span>
+		<span class="hidden-reading">ゆーりんちー</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1726,9 +1999,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="083"><td>083</td>
-<td class="recipe-name"><a href="output/recipe_083.html">にこみハンバーグ
+		<td class="recipe-name"><a href="output/recipe_083.html">にこみハンバーグ
 </a>
-<span class="hidden-reading">にこみはんばーぐ</span>
+		<span class="hidden-reading">にこみはんばーぐ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1744,9 +2017,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="084"><td>084</td>
-<td class="recipe-name"><a href="output/recipe_084.html">てりやき（鶏むね肉）
+		<td class="recipe-name"><a href="output/recipe_084.html">てりやき（鶏むね肉）
 </a>
-<span class="hidden-reading">てりやき（とりむねにく）</span>
+		<span class="hidden-reading">てりやき（とりむねにく）</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1762,9 +2035,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="085"><td>085</td>
-<td class="recipe-name"><a href="output/recipe_085.html">はる人参と牛肉のピラフ（玉ねぎ、にんじん、ミックスベジタブル、バター、牛肉、クミン、塩コショウ、ブイヨン）
+		<td class="recipe-name"><a href="output/recipe_085.html">はる人参と牛肉のピラフ（玉ねぎ、にんじん、ミックスベジタブル、バター、牛肉、クミン、塩コショウ、ブイヨン）
 </a>
-<span class="hidden-reading">はるにんじんとぎゅうにくのぴらふ</span>
+		<span class="hidden-reading">はるにんじんとぎゅうにくのぴらふ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1783,9 +2056,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="086"><td>086</td>
-<td class="recipe-name"><a href="output/recipe_086.html">和風パスタ（ベーコン、しょうゆ、ホウレンソウ）
+		<td class="recipe-name"><a href="output/recipe_086.html">和風パスタ（ベーコン、しょうゆ、ホウレンソウ）
 </a>
-<span class="hidden-reading">わふうぱすた</span>
+		<span class="hidden-reading">わふうぱすた</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1801,9 +2074,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="087"><td>087</td>
-<td class="recipe-name"><a href="output/recipe_087.html">３色ドン（とりそぼろ、卵、えだまめ）
+		<td class="recipe-name"><a href="output/recipe_087.html">３色ドン（とりそぼろ、卵、えだまめ）
 </a>
-<span class="hidden-reading">さんしょくどん</span>
+		<span class="hidden-reading">さんしょくどん</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1819,9 +2092,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="088"><td>088</td>
-<td class="recipe-name"><a href="output/recipe_088.html">ピーマンチーズ肉堤生姜焼き味
+		<td class="recipe-name"><a href="output/recipe_088.html">ピーマンチーズ肉堤生姜焼き味
 </a>
-<span class="hidden-reading">ぴーまんちーずにくづつみしょうがやきあじ</span>
+		<span class="hidden-reading">ぴーまんちーずにくづつみしょうがやきあじ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1837,9 +2110,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="089"><td>089</td>
-<td class="recipe-name"><a href="output/recipe_089.html">チキテキ（鶏もも肉二枚切る → 粉かけて焼く → たれかける）
+		<td class="recipe-name"><a href="output/recipe_089.html">チキテキ（鶏もも肉二枚切る → 粉かけて焼く → たれかける）
 </a>
-<span class="hidden-reading">ちきてき</span>
+		<span class="hidden-reading">ちきてき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1855,9 +2128,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="090"><td>090</td>
-<td class="recipe-name"><a href="output/recipe_090.html">ポトフ（具材大き目 ウインナー、ジャガイモ、ニンジン、玉ねぎ）
+		<td class="recipe-name"><a href="output/recipe_090.html">ポトフ（具材大き目 ウインナー、ジャガイモ、ニンジン、玉ねぎ）
 </a>
-<span class="hidden-reading">ぽとふ</span>
+		<span class="hidden-reading">ぽとふ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1876,9 +2149,9 @@
 	 
 	 
 	 <tr data-id="091"><td>091</td>
-<td class="recipe-name"><a href="output/recipe_091.html">給食味のミネストローネ（トマト缶（カゴメ）、大豆（水煮））
+		<td class="recipe-name"><a href="output/recipe_091.html">給食味のミネストローネ（トマト缶（カゴメ）、大豆（水煮））
 </a>
-<span class="hidden-reading">きゅうしょくあじのみねすとろーね</span>
+		<span class="hidden-reading">きゅうしょくあじのみねすとろーね</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1895,9 +2168,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="092"><td>092</td>
-<td class="recipe-name"><a href="output/recipe_092.html">しゅうまい（玉ねぎ、エノキ、ひき肉をシュウマイの皮で包む）
+		<td class="recipe-name"><a href="output/recipe_092.html">しゅうまい（玉ねぎ、エノキ、ひき肉をシュウマイの皮で包む）
 </a>
-<span class="hidden-reading">しゅうまい</span>
+		<span class="hidden-reading">しゅうまい</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1913,9 +2186,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="093"><td>093</td>
-<td class="recipe-name"><a href="output/recipe_093.html">おかかあえ
+		<td class="recipe-name"><a href="output/recipe_093.html">おかかあえ
 </a>
-<span class="hidden-reading">おかかあえ</span>
+		<span class="hidden-reading">おかかあえ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1930,9 +2203,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="094"><td>094</td>
-<td class="recipe-name"><a href="output/recipe_094.html">春雨のサラダ
+		<td class="recipe-name"><a href="output/recipe_094.html">春雨のサラダ
 </a>
-<span class="hidden-reading">はるさめのさらだ</span>
+		<span class="hidden-reading">はるさめのさらだ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1948,9 +2221,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="095"><td>095</td>
-<td class="recipe-name"><a href="output/recipe_095.html">スパゲティサラダ
+		<td class="recipe-name"><a href="output/recipe_095.html">スパゲティサラダ
 </a>
-<span class="hidden-reading">すぱげてぃさらだ</span>
+		<span class="hidden-reading">すぱげてぃさらだ</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1966,9 +2239,9 @@
 	  <td class="match-rate"></td>
 	</tr>
 	<tr data-id="096"><td>096</td>
-<td class="recipe-name"><a href="output/recipe_096.html">レタスとツナときゅうりの何か（）
+		<td class="recipe-name"><a href="output/recipe_096.html">レタスとツナときゅうりの何か（）
 </a>
-<span class="hidden-reading">れたすとつなときゅうりのなにか</span>
+		<span class="hidden-reading">れたすとつなときゅうりのなにか</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -1990,9 +2263,9 @@
 
 
 	<tr data-id="097"><td>097</td>
-<td class="recipe-name"><a href="output/recipe_097.html">シュウマイ
+		<td class="recipe-name"><a href="output/recipe_097.html">シュウマイ
 </a>
-<span class="hidden-reading">しゅうまい</span>
+		<span class="hidden-reading">しゅうまい</span>
 	  </td>
 	  <td>
 		<span class="material">玉ねぎ:中1個(200g)</span>
@@ -2027,9 +2300,9 @@
 
 
 	<tr data-id="999"><td>999</td>
-<td class="recipe-name"><a href="output/recipe_999.html">しょっぱい卵焼き
+		<td class="recipe-name"><a href="output/recipe_999.html">しょっぱい卵焼き
 </a>
-<span class="hidden-reading">しょっぱいたまごやき</span>
+		<span class="hidden-reading">しょっぱいたまごやき</span>
 	  </td>
 	  <td>
 		<span class="material"></span>
@@ -2260,21 +2533,29 @@
   generateMaterialButtons();
   filterAndSortRecipes();
   
-  // トップへ戻るボタン
+  // トップへ戻るボタンとか
   const backToTopBtn = document.getElementById('backToTop');
+  const scrollToBottomBtn = document.getElementById('scrollToBottom');
 
-	window.addEventListener('scroll', () => {
-	  if (window.scrollY > 200) {
-		backToTopBtn.style.display = 'block';
-	  } else {
-		backToTopBtn.style.display = 'none';
-	  }
-	});
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.body.scrollHeight;
 
-	backToTopBtn.addEventListener('click', () => {
-	  window.scrollTo({ top: 0, behavior: 'smooth' });
-	});
+    // トップへ戻るボタン表示
+    backToTopBtn.style.display = scrollY > 200 ? 'block' : 'none';
 
+    // 一番下へボタン表示（下に余白があるときのみ）
+    scrollToBottomBtn.style.display = scrollY + windowHeight < documentHeight - 200 ? 'block' : 'none';
+  });
+
+  backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  scrollToBottomBtn.addEventListener('click', () => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
   
   
   
@@ -2285,174 +2566,43 @@
 	  updateRecipeVisibility(); // ← 既存のフィルタ処理
 	});
 
-	  
+
+
+
+
+
+//　ID順、料理名（ふりがな）順 　動きません　飽きた
+
+	document.getElementById('sortById').addEventListener('click', () => {
+	  const tableBody = document.querySelector('#recipeTable tbody');
+	  const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(.hidden)'));
+
+	  const sorted = [...visibleRows].sort((a, b) => {
+		return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+	  });
+
+	  sorted.forEach(row => tableBody.appendChild(row));
+	});
+
+	document.getElementById('sortByName').addEventListener('click', () => {
+	  const tableBody = document.querySelector('#recipeTable tbody');
+	  const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(.hidden)'));
+
+	  const sorted = [...visibleRows].sort((a, b) => {
+		const nameA = a.querySelector('.hidden-reading')?.textContent.trim() || '';
+		const nameB = b.querySelector('.hidden-reading')?.textContent.trim() || '';
+		return nameA.localeCompare(nameB, 'ja');
+	  });
+
+	  sorted.forEach(row => tableBody.appendChild(row));
+	});
+
+
+
+
+		  
   
   
 </script>
 
-
-
-
-<style>
-
-
-
-
-
-	/* トップに戻るボタン */
-	#backToTop {
-	  position: fixed;
-	  bottom: 30px;
-	  right: 30px;
-	  padding: 16px 24px;     /* ← 横長にしたいならここの値を調整 */
-	  font-size: 18px;        /* ← 文字サイズを大きく */
-	  background-color: #333;
-	  color: #fff;
-	  border: none;
-	  border-radius: 0;       /* ← 角丸なし */
-	  cursor: pointer;
-	  display: none;
-	  z-index: 1000;
-	  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-	  white-space: nowrap;    /* ← 改行させない！ */
-	}
-
-
-
-
-
-  /* 選択中の材料（青） */
-  .material.selected-material {
-    color: #0077cc;
-    font-weight: bold;
-    background-color: #e0f0ff;
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-
-  /* 不足している材料（赤） */
-  .material.missing {
-    color: red;
-    font-weight: bold;
-    background-color: #ffe5e5;
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-
-  /* 不足材料の一致度欄表示 */
-  .match-rate .missing {
-    display: inline-block;
-    margin-top: 4px;
-  }
-
-  /* ★ボタンの選択状態 */
-  #favoriteFilterBtn.selected {
-    background-color: gold;
-    color: #333;
-    font-weight: bold;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-  }
-
-  /* お気に入り列のスタイル */
-  td:nth-child(6) {
-    text-align: center;
-    font-size: 1.2em;
-    color: #ff9900;
-  }
-  
-
-
-  /* 並べ替えボタン */
-	.sort-buttons {
-	  margin-bottom: 10px;
-	  display: flex;
-	  gap: 8px;
-	}
-
-  /* 個数の多いボタンの色変える */
-	.filter-buttons button.selected {
-	  background-color: #ffcc66;
-	  color: #333;
-	  font-weight: bold;
-	  border: 1px solid #999;
-	}
-
-
-  
-  
-
-	@media screen and (max-width: 768px) {
-	  .filter-buttons {
-		justify-content: center;
-	  }
-
-	.filter-buttons button {
-	  width: 100px;              /* ← 完全固定幅 */
-	  flex: none;                /* ← 自動調整を無効化 */
-	  white-space: nowrap;       /* ← テキストの折り返し防止 */
-	  overflow: hidden;          /* ← はみ出た文字を隠す（任意） */
-	  text-overflow: ellipsis;   /* ← はみ出た文字を「…」で省略（任意） */
-	  padding: 6px 10px;
-	  margin: 4px;
-	  font-size: 0.9em;
-	  box-sizing: border-box;
-	}
-
-
-	.filter-buttons {
-	  display: grid;
-	  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-	  gap: 8px;
-	  justify-content: center;
-	  margin-bottom: 20px;
-	}
-
-	.filter-buttons button {
-	  padding: 8px 12px;
-	  white-space: nowrap;
-	  border: none;
-	  border-radius: 4px;
-	  background-color: #eee;
-	  cursor: pointer;
-	  transition: background-color 0.2s;
-	}
-
-	
-
-
-    .search-box {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    input[type="text"] {
-      width: 90%;
-    }
-
-    table, th, td {
-      font-size: 0.9em;
-    }
-
-    td img {
-      max-width: 80px;
-    }
-
-    .filter-buttons {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .filter-buttons button {
-      width: 90%;
-      margin: 4px 0;
-    }
-  }
-  
-	.hidden-reading {
-	display: none;
-	}
-
-  
-</style>
-
-
+</body>
