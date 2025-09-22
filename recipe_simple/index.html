@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>レシピ検索</title>
 		<div style="text-align: right;">
-			最終更新日　1:11 --2025/09/23 <br>
+			最終更新日　??:?? --2025/09/23 <br>
 			<a href="update.html">ログ</a>
 		</div>
 
@@ -35,11 +35,15 @@
 	/* 検索ボックスのレイアウト */
 	.search-box {
 	  display: flex;
-	  flex-direction: column;
+	  flex-direction: row;       /* 横並び */
+	  justify-content: center;   /* 中央揃え！ */
 	  align-items: center;
 	  gap: 10px;
+	  flex-wrap: wrap;           /* スマホで折り返し可能（任意） */
 	  margin-bottom: 20px;
 	}
+
+
 
 	/* テキスト入力 */
 	input[type="text"] {
@@ -435,9 +439,88 @@
 	display: none;
 	}
 	
-	
-	
-	
+
+	#materialButtons {
+	  display: flex;
+	  flex-wrap: wrap;
+	  gap: 8px;
+	  justify-content: flex-start; /* 左寄せ（任意） */
+	  margin-bottom: 20px;
+	}
+
+	#materialButtons button {
+	  white-space: nowrap;
+	  overflow: visible;
+	  text-overflow: unset;
+	  max-width: none;
+	  padding: 12px 18px;
+	  font-size: 16px;
+	  line-height: 1.4;
+	  border-radius: 6px;
+	  background-color: #f0f0f0;
+	  border: 1px solid #ccc;
+	  cursor: pointer;
+	  box-sizing: border-box;
+	  transition: background-color 0.2s, box-shadow 0.2s;
+	}
+
+	/* 選択された材料ボタン（元の黄色スタイル） */
+	#materialButtons button.selected {
+	  background-color: #ffcc66;
+	  color: #333;
+	  font-weight: bold;
+	  border: 1px solid #999;
+	  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+	}
+
+
+
+	/* 一致度100%の行に黄色系の背景色 */
+	#recipeTable tr.perfect-match {
+	  background-color: #fff8dc; /* 薄い黄色（cornsilk） */
+	  box-shadow: inset 0 0 4px rgba(255, 204, 102, 0.6);
+	}
+
+
+
+	.sort-buttons button.selected {
+	  background-color: #ffcc66;
+	  color: #333;
+	  font-weight: bold;
+	  border: 1px solid #999;
+	  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+	}
+
+
+
+	#materialSection summary {
+	  font-size: 1.1em;
+	  font-weight: bold;
+	  background-color: #f0f0f0;
+	  color: #333;
+	  padding: 12px 16px;
+	  border-radius: 6px;
+	  border: 1px solid #999;
+	  cursor: pointer;
+	  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+	  transition: background-color 0.2s;
+	  list-style: none; /* ブラウザによっては矢印を消す */
+	  display: inline-block;
+	  margin-bottom: 30px
+	}
+
+
+	#materialSection[open] {
+	  border: 2px solid #ffcc66;
+	  border-radius: 6px;
+	  padding: 10px;
+	  background-color: #fff8dc; /* 薄い黄色 */
+	  margin-bottom: 20px;
+	}
+
+
+
+
   </style>
   
   
@@ -456,9 +539,10 @@
 <button id="scrollToBottom">↓ 一番下へ</button>
 
 <div class="sort-buttons">
-  <button id="sortById">ID順</button>
-  <button id="sortByName">料理名順</button>
+  <button id="sortRecipesById">ID順</button>
+  <button id="sortRecipesByName">料理名順</button>
 </div>
+
 
 
 
@@ -473,7 +557,7 @@
   <summary>材料で絞り込む</summary>
   
   <div id="sortButtons" class="sort-buttons">
-  <button onclick="setMaterialSort('name')">名前順</button>
+  <button onclick="setMaterialSort('name')">名前順（漢字非対応）</button>
   <button onclick="setMaterialSort('count')">出現数順</button>
   </div>
   
@@ -2377,70 +2461,66 @@
 
 
 <script>
-
-	let materialSortMode = 'count'; // 初期は出現回数順
-	
-	function setMaterialSort(mode) {
-	  materialSortMode = mode;
-	  generateMaterialButtons(); // 並び替えを再実行
-	}
-
+  let materialSortMode = 'count'; // 材料ボタンの並び順（出現回数 or 名前）
+  let currentSortMode = 'id';     // レシピの並び順（id or name）
 
   const selectedMaterials = new Set();
   let favoriteFilterActive = false;
 
-  // 材料ボタン生成
-	function generateMaterialButtons() {
-	  const materialCount = {};
-	  document.querySelectorAll('.material').forEach(span => {
-		const name = span.textContent.split(':')[0].trim();
-		materialCount[name] = (materialCount[name] || 0) + 1;
-	  });
+  function setMaterialSort(mode) {
+    materialSortMode = mode;
+    generateMaterialButtons();
+  }
 
-	  const materials = Object.keys(materialCount);
-
-	  let sortedMaterials;
-	  if (materialSortMode === 'name') {
-		sortedMaterials = materials.sort((a, b) => a.localeCompare(b, 'ja'));
-	  } else {
-		sortedMaterials = materials.sort((a, b) => materialCount[b] - materialCount[a]);
+  function generateMaterialButtons() {
+    const materialCount = {};
+	document.querySelectorAll('#recipeTable .material').forEach(span => {
+	  const raw = span.textContent.split(':')[0].trim();
+	  if (raw !== '') {
+		materialCount[raw] = (materialCount[raw] || 0) + 1;
 	  }
+	});
 
-	  const topMaterials = Object.entries(materialCount)
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, 10)
-		.map(entry => entry[0]);
 
-	  const container = document.getElementById('materialButtons');
-	  container.innerHTML = ''; // 前回のボタンをクリア
+	const materials = Object.keys(materialCount);
 
-	  sortedMaterials.forEach(mat => {
-		const btn = document.createElement('button');
-		btn.textContent = `${mat} (${materialCount[mat]})`;
-		btn.dataset.material = mat;
-		btn.onclick = () => toggleMaterial(btn, mat);
-		if (topMaterials.includes(mat)) {
-		  btn.classList.add('frequent');
-		}
-		container.appendChild(btn);
+	let sortedMaterials;
+	if (materialSortMode === 'name') {
+	  sortedMaterials = materials.sort((a, b) => a.localeCompare(b, 'ja'));
+	} else {
+	  sortedMaterials = materials.sort((a, b) => {
+		const diff = materialCount[b] - materialCount[a];
+		return diff !== 0 ? diff : a.localeCompare(b, 'ja');
 	  });
-	  
-	  
-	  
-
-
-	  // ★ボタンのイベント登録（そのままでOK）
-	  const favBtn = document.getElementById('favoriteFilterBtn');
-	  favBtn.onclick = () => {
-		favoriteFilterActive = !favoriteFilterActive;
-		favBtn.classList.toggle('selected', favoriteFilterActive);
-		filterAndSortRecipes();
-	  };
 	}
 
 
+    const topMaterials = Object.entries(materialCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(entry => entry[0]);
 
-  // 材料選択のトグル
+    const container = document.getElementById('materialButtons');
+    container.innerHTML = '';
+
+    sortedMaterials.forEach(mat => {
+      const btn = document.createElement('button');
+      btn.textContent = `${mat} (${materialCount[mat]})`;
+      btn.dataset.material = mat;
+      btn.onclick = () => toggleMaterial(btn, mat);
+      if (topMaterials.includes(mat)) btn.classList.add('frequent');
+      if (selectedMaterials.has(mat)) btn.classList.add('selected');
+      container.appendChild(btn);
+    });
+
+    const favBtn = document.getElementById('favoriteFilterBtn');
+    favBtn.onclick = () => {
+      favoriteFilterActive = !favoriteFilterActive;
+      favBtn.classList.toggle('selected', favoriteFilterActive);
+      filterAndSortRecipes();
+    };
+  }
+
   function toggleMaterial(button, mat) {
     if (selectedMaterials.has(mat)) {
       selectedMaterials.delete(mat);
@@ -2449,45 +2529,13 @@
       selectedMaterials.add(mat);
       button.classList.add('selected');
     }
+    generateMaterialButtons();
     filterAndSortRecipes();
   }
 
-  // キーワード検索
-  document.getElementById('keyword').addEventListener('input', filterAndSortRecipes);
-
-  // 条件クリア
-	function clearFilters() {
-	  // 素材フィルターの初期化
-	  selectedMaterials.clear();
-
-	  // キーワード検索の初期化
-	  document.getElementById('keyword').value = '';
-
-	  // ボタンの選択状態を解除
-	  document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('selected'));
-
-	  // お気に入りフィルターの初期化
-	  favoriteFilterActive = false;
-	  document.getElementById('favoriteFilterBtn').classList.remove('selected');
-
-	  // チェックボックスの初期化（例: 材料やカテゴリなど）
-	  document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-	  // セレクトメニューの初期化（例: ソート順やカテゴリ選択など）
-	  document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-
-	  // ページネーションやソート順などのグローバル変数も初期化（必要に応じて）
-	  if (typeof currentPage !== 'undefined') currentPage = 1;
-	  if (typeof sortOrder !== 'undefined') sortOrder = 'default';
-
-	  // フィルター適用処理を再実行
-	  filterAndSortRecipes();
-	}
 
 
-  // レシピフィルタ＋一致度計算＋並び替え
   function filterAndSortRecipes() {
-  
     const keyword = document.getElementById('keyword').value.trim().toLowerCase();
     const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
     const filteredRows = [];
@@ -2501,30 +2549,22 @@
       const materialSpans = row.querySelectorAll('.material');
       const materialList = Array.from(materialSpans).map(span => span.textContent.split(':')[0].trim());
 
-      // 材料一致度計算
       const matched = materialList.filter(m => selectedMaterials.has(m));
       const missing = Array.from(selectedMaterials).filter(m => !materialList.includes(m));
       const matchRateCell = row.querySelector('.match-rate');
       matchRateCell.innerHTML = selectedMaterials.size > 0
         ? `${matched.length}/${selectedMaterials.size} (${Math.round((matched.length / selectedMaterials.size) * 100)}%)`
         : '';
-
       if (missing.length > 0) {
         matchRateCell.innerHTML += `<br><span class="missing">不要: ${missing.join(', ')}</span>`;
       }
 
-      // 材料の色分け（不要材料は赤にしない、選択材料のみ青）
       materialSpans.forEach(span => {
         const matName = span.textContent.split(':')[0].trim();
-        if (selectedMaterials.has(matName)) {
-          span.classList.add('selected-material');
-        } else {
-          span.classList.remove('selected-material');
-        }
-        span.classList.remove('missing'); // 赤表示は一致度欄だけに限定
+        span.classList.toggle('selected-material', selectedMaterials.has(matName));
+        span.classList.remove('missing');
       });
 
-      // 表示判定
       const genreMatch = genreList.some(g => g.includes(keyword));
       const keywordMatch = keyword === '' || name.includes(keyword) || genreMatch || materialList.some(m => m.includes(keyword)) || reading.includes(keyword);
       const materialMatch = selectedMaterials.size === 0 || matched.length > 0;
@@ -2533,38 +2573,57 @@
       const shouldShow = keywordMatch && materialMatch && favoriteMatch;
       row.classList.toggle('hidden', !shouldShow);
 
-      if (shouldShow) {
-        row.dataset.matchScore = matched.length;
-        filteredRows.push(row);
-      }
+		if (shouldShow) {
+		  row.dataset.matchScore = matched.length;
+
+		  // 一致度100%ならクラス追加
+		  if (selectedMaterials.size > 0 && matched.length === selectedMaterials.size) {
+			row.classList.add('perfect-match');
+		  } else {
+			row.classList.remove('perfect-match');
+		  }
+
+		  filteredRows.push(row);
+		}
+
     });
 
-    // 一致度順に並び替え
-	const tbody = document.querySelector('#recipeTable tbody');
+    const tbody = document.querySelector('#recipeTable tbody');
+    if (selectedMaterials.size > 0) {
+      filteredRows.sort((a, b) => b.dataset.matchScore - a.dataset.matchScore);
+    } else if (currentSortMode === 'name') {
+      filteredRows.sort((a, b) => {
+        const nameA = a.querySelector('.hidden-reading')?.textContent.trim() || '';
+        const nameB = b.querySelector('.hidden-reading')?.textContent.trim() || '';
+        return nameA.localeCompare(nameB, 'ja');
+      });
+    } else {
+      filteredRows.sort((a, b) => a.dataset.id - b.dataset.id);
+    }
 
-	if (selectedMaterials.size > 0) {
-	  filteredRows.sort((a, b) => {
-		const scoreA = parseInt(a.dataset.matchScore || '0');
-		const scoreB = parseInt(b.dataset.matchScore || '0');
-		return scoreB - scoreA;
-	  });
-	} else {
-	  filteredRows.sort((a, b) => {
-		const idA = parseInt(a.dataset.id || '0');
-		const idB = parseInt(b.dataset.id || '0');
-		return idA - idB;
-	  });
-	}
-
-	filteredRows.forEach(row => tbody.appendChild(row));
-
+    filteredRows.forEach(row => tbody.appendChild(row));
   }
 
-  // 初期化
+  document.getElementById('keyword').addEventListener('input', filterAndSortRecipes);
+
+  function clearFilters() {
+    selectedMaterials.clear();
+    document.getElementById('keyword').value = '';
+    document.querySelectorAll('.filter-buttons button').forEach(btn => btn.classList.remove('selected'));
+    favoriteFilterActive = false;
+    document.getElementById('favoriteFilterBtn').classList.remove('selected');
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    filterAndSortRecipes();
+  }
+
+
+
+
+
   generateMaterialButtons();
   filterAndSortRecipes();
-  
-  // トップへ戻るボタンとか
+
   const backToTopBtn = document.getElementById('backToTop');
   const scrollToBottomBtn = document.getElementById('scrollToBottom');
 
@@ -2572,11 +2631,7 @@
     const scrollY = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.body.scrollHeight;
-
-    // トップへ戻るボタン表示
     backToTopBtn.style.display = scrollY > 200 ? 'block' : 'none';
-
-    // 一番下へボタン表示（下に余白があるときのみ）
     scrollToBottomBtn.style.display = scrollY + windowHeight < documentHeight - 200 ? 'block' : 'none';
   });
 
@@ -2587,54 +2642,38 @@
   scrollToBottomBtn.addEventListener('click', () => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   });
-  
-  
-  
-  
-  
-	  button.addEventListener("click", () => {
-	  button.classList.toggle("selected");
-	  updateRecipeVisibility(); // ← 既存のフィルタ処理
-	});
 
+	document.querySelectorAll('.sort-buttons button').forEach(btn => {
+	  btn.addEventListener('click', () => {
+		// 全ボタンから .selected を外す
+		document.querySelectorAll('.sort-buttons button').forEach(b => b.classList.remove('selected'));
 
+		// 押したボタンに .selected を付ける
+		btn.classList.add('selected');
 
+		// 並び替えモードを更新
+		if (btn.id === 'sortRecipesById') {
+		  currentSortMode = 'id';
+		} else if (btn.id === 'sortRecipesByName') {
+		  currentSortMode = 'name';
+		} else if (btn.id === 'sortMaterialsByName') {
+		  materialSortMode = 'name';
+		} else if (btn.id === 'sortMaterialsByCount') {
+		  materialSortMode = 'count';
+		}
 
-
-
-//　ID順、料理名（ふりがな）順 　動きません　飽きた
-
-	document.getElementById('sortById').addEventListener('click', () => {
-	  const tableBody = document.querySelector('#recipeTable tbody');
-	  const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(.hidden)'));
-
-	  const sorted = [...visibleRows].sort((a, b) => {
-		return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+		filterAndSortRecipes();
+		generateMaterialButtons();
 	  });
-
-	  sorted.forEach(row => tableBody.appendChild(row));
-	});
-
-	document.getElementById('sortByName').addEventListener('click', () => {
-	  const tableBody = document.querySelector('#recipeTable tbody');
-	  const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(.hidden)'));
-
-	  const sorted = [...visibleRows].sort((a, b) => {
-		const nameA = a.querySelector('.hidden-reading')?.textContent.trim() || '';
-		const nameB = b.querySelector('.hidden-reading')?.textContent.trim() || '';
-		return nameA.localeCompare(nameB, 'ja');
-	  });
-
-	  sorted.forEach(row => tableBody.appendChild(row));
 	});
 
 
-
-
-		  
-  
-  
+  document.querySelectorAll('.filter-buttons button').forEach(button => {
+    button.addEventListener("click", () => {
+      button.classList.toggle("selected");
+      filterAndSortRecipes();
+    });
+  });
 </script>
 
 </body>
-
