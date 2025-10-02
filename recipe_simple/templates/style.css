@@ -1,0 +1,84 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+  font-size: 14px; /* 全体の文字サイズを拡大 */
+}
+
+a {
+  display: inline;
+  font-weight: bold;
+  font-size: 1em;
+  margin-bottom: 0;
+  white-space: nowrap; /* ← これでリンク内の改行も防げます */
+}
+
+
+.recipe-name {
+  font-size: 1.6em;
+  font-weight: bold;
+  padding: 12px 0;
+}
+
+img {
+  max-width: 70%;
+  height: auto;
+  border: 1px solid #ccc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 1.1em; /* テーブル全体の文字サイズを拡大 */
+}
+
+th {
+  background-color: #f0f0f0;
+  text-align: left;
+  padding: 12px;
+  font-size: 1.3em;
+}
+
+td {
+  padding: 12px;
+  vertical-align: top;
+  border-bottom: 1px dotted #ccc;
+  font-size: 1.1em;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.material {
+  white-space: nowrap;
+  display: inline-block;
+  font-size: 1.1em;
+}
+
+.material.special1 {
+  background-color: #e0e0e0;
+  font-weight: bold;
+}
+
+.material.special2 {
+  background-color: #d0f0c0;
+  font-weight: bold;
+}
+
+.material.special3 {
+  background-color: #f0d0d0;
+  font-weight: bold;
+}
+
+.material.special4 {
+  background-color: #c0d0f0;
+  font-weight: bold;
+}
+
+/* 必要に応じて special5, special6... を追加可能 */
+
+.source-link {
+  font-style: italic;
+  color: #666;
+  padding: 6px 0;
+  font-size: 1em;
+}
