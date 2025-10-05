@@ -1,26 +1,26 @@
 body {
   font-family: sans-serif;
-  margin: 20px;
-  font-size: 14px; /* 全体の文字サイズを拡大 */
+  margin: 0;
+  padding: 0;
+  font-size: 16px; /* PCでは標準サイズ */
 }
 
 a {
   display: inline;
   font-weight: bold;
-  font-size: 1em;
+  font-size: 0.9em;
   margin-bottom: 0;
-  white-space: nowrap; /* ← これでリンク内の改行も防げます */
+  white-space: nowrap;
 }
 
-
 .recipe-name {
-  font-size: 1.6em;
+  font-size: 1.3em;
   font-weight: bold;
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 img {
-  max-width: 70%;
+  max-width: 100%;
   height: auto;
   border: 1px solid #ccc;
 }
@@ -28,30 +28,38 @@ img {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  font-size: 1.1em; /* テーブル全体の文字サイズを拡大 */
+  margin-top: 16px;
+  font-size: 0.95em;
 }
 
 th {
   background-color: #f0f0f0;
   text-align: left;
-  padding: 12px;
-  font-size: 1.3em;
+  padding: 8px;
+  font-size: 1em;
 }
 
 td {
-  padding: 12px;
+  padding: 8px;
   vertical-align: top;
   border-bottom: 1px dotted #ccc;
-  font-size: 1.1em;
-  overflow-x: auto;
-  max-width: 100%;
+  font-size: 0.95em;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.material {
-  white-space: nowrap;
-  display: inline-block;
-  font-size: 1.1em;
+.material,
+.material.special1,
+.material.special2,
+.material.special3,
+.material.special4 {
+  white-space: normal;
+  display: block;
+  word-break: break-word;
+  overflow: hidden;
+  max-height: 3.6em;
+  line-height: 1.2em;
+  font-size: 0.95em;
 }
 
 .material.special1 {
@@ -74,11 +82,56 @@ td {
   font-weight: bold;
 }
 
-/* 必要に応じて special5, special6... を追加可能 */
-
 .source-link {
   font-style: italic;
   color: #666;
-  padding: 6px 0;
-  font-size: 1em;
+  padding: 4px 0;
+  font-size: 0.9em;
+}
+
+@media screen and (max-width: 600px) {
+  body {
+    font-size: 13px; /* スマホでは少し控えめに */
+  }
+
+  .recipe-name {
+    font-size: 1.2em;
+  }
+
+  table {
+    font-size: 0.9em;
+  }
+
+  th {
+    font-size: 0.95em;
+  }
+
+  td,
+  .material,
+  .material.special1,
+  .material.special2,
+  .material.special3,
+  .material.special4 {
+    font-size: 0.9em;
+    max-height: none; /* スマホでは高さ制限解除 */
+  }
+
+  img {
+    max-width: 100%;
+  }
+}
+
+.recipe-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.recipe-table th:nth-child(1),
+.recipe-table td:nth-child(1) {
+  width: 30%;
+}
+
+.recipe-table th:nth-child(2),
+.recipe-table td:nth-child(2) {
+  width: 70%;
 }
