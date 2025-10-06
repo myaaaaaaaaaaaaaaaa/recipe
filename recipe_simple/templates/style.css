@@ -1,137 +1,42 @@
-body {
-  font-family: sans-serif;
-  margin: 0;
-  padding: 0;
-  font-size: 16px; /* PCでは標準サイズ */
+/* 新しいHTML構造に合わせてシンプルなCSSを適用 */
+
+/* tbody内の<th>（新しい見出し: 材料/作り方）のスタイル */
+.recipe-table th {
+    background-color: #f0f0f0;
+    text-align: left;
+    padding: 8px;
+    font-size: 1.2em; /* 少し大きく */
+    font-weight: bold;
+    margin-top: 16px; /* セクション間にスペース */
+    border-bottom: 2px solid #5cb85c; /* 区切り線 */
 }
 
-a {
-  display: inline;
-  font-weight: bold;
-  font-size: 0.9em;
-  margin-bottom: 0;
-  white-space: nowrap;
+/* 最初のtbodyの見出しには上の余白は不要 */
+.recipe-table tbody:first-of-type th {
+    margin-top: 0;
 }
 
-.recipe-name {
-  font-size: 1.3em;
-  font-weight: bold;
-  padding: 8px 0;
+/* 各材料/手順のtdのスタイル */
+.recipe-table td {
+    padding: 8px;
+    vertical-align: top;
+    border-bottom: 1px dotted #ccc;
+    /* その他元のスタイルを維持 */
 }
 
 img {
-  max-width: 100%;
+  max-width: 300px; /* 画像の最大幅を300ピクセルに制限 */
+  width: 100%;     /* 300px未満のときは親要素の100%になるようにする */
   height: auto;
   border: 1px solid #ccc;
+  display: block;  /* 中央寄せのためブロック要素にする */
+  margin: 0 auto;  /* 画像を中央に寄せる */
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-  font-size: 0.95em;
-}
-
-th {
-  background-color: #f0f0f0;
-  text-align: left;
-  padding: 8px;
-  font-size: 1em;
-}
-
-td {
-  padding: 8px;
-  vertical-align: top;
-  border-bottom: 1px dotted #ccc;
-  font-size: 0.95em;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.material,
-.material.special1,
-.material.special2,
-.material.special3,
-.material.special4 {
-  white-space: normal;
-  display: block;
-  word-break: break-word;
-  overflow: hidden;
-  max-height: 3.6em;
-  line-height: 1.2em;
-  font-size: 0.95em;
-}
-
-.material.special1 {
-  background-color: #e0e0e0;
-  font-weight: bold;
-}
-
-.material.special2 {
-  background-color: #d0f0c0;
-  font-weight: bold;
-}
-
-.material.special3 {
-  background-color: #f0d0d0;
-  font-weight: bold;
-}
-
-.material.special4 {
-  background-color: #c0d0f0;
-  font-weight: bold;
-}
-
-.source-link {
-  font-style: italic;
-  color: #666;
-  padding: 4px 0;
-  font-size: 0.9em;
-}
-
+/* スマホ対応（メディアクエリ内） */
 @media screen and (max-width: 600px) {
-  body {
-    font-size: 13px; /* スマホでは少し控えめに */
-  }
-
-  .recipe-name {
-    font-size: 1.2em;
-  }
-
-  table {
-    font-size: 0.9em;
-  }
-
-  th {
-    font-size: 0.95em;
-  }
-
-  td,
-  .material,
-  .material.special1,
-  .material.special2,
-  .material.special3,
-  .material.special4 {
-    font-size: 0.9em;
-    max-height: none; /* スマホでは高さ制限解除 */
-  }
-
   img {
-    max-width: 100%;
+    max-width: 100%; /* スマホでは画面幅いっぱいに広げてもOKにする */
+    margin: 0;      /* 中央寄せを解除（左寄せに戻す） */
   }
-}
-
-.recipe-table {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.recipe-table th:nth-child(1),
-.recipe-table td:nth-child(1) {
-  width: 30%;
-}
-
-.recipe-table th:nth-child(2),
-.recipe-table td:nth-child(2) {
-  width: 70%;
 }

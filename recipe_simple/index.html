@@ -6,8 +6,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  
-<!-- こ<meta name="viewport" content="width=device-width, initial-scale=1"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
   <title>レシピ検索</title>
@@ -39,551 +38,355 @@
 
 
 
-  <style>
-  
-
-	/* 「ジャンル」の列を非表示にする */
-	#recipeTable th:nth-child(4),
-	#recipeTable td:nth-child(4) {
-		display: none;
-	}
-
-	/* 「画像」の列を非表示にする */
-	#recipeTable th:nth-child(5),
-	#recipeTable td:nth-child(5) {
-		display: none;
-	}
-
-	/* 「よく出る」の列を非表示にする */
-	#recipeTable th:nth-child(6),
-	#recipeTable td:nth-child(6) {
-		display: none;
-	}
-
-
-
-  
-	 /* 全体の基本スタイル */
-	* {
-	  box-sizing: border-box;
-	}
-
-	body {
-	  font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
-	  background-color: #f9f9f9;
-	  margin: 0;
-	  padding: 20px;
-	  color: #333;
-	  font-size: 18px; /* デフォルトはPC向けサイズ */
-	}
-
-	/* タイトル */
-	h1 {
-	  text-align: center;
-	  margin-bottom: 30px;
-	  color: #444;
-	  font-size: 2em;
-	}
-	
-	
-	/* スマホ向けの調整（画面幅が600px以下）削除　無理 */
-
-
-
-
-
-
-
-	/* 検索ボックスのレイアウト */
-	.search-box {
-	  display: flex;
-	  flex-direction: row;       /* 横並び */
-	  justify-content: center;   /* 中央揃え！ */
-	  align-items: center;
-	  gap: 10px;
-	  flex-wrap: wrap;           /* スマホで折り返し可能（任意） */
-	  margin-bottom: 20px;
-	}
-
-
-
-	/* テキスト入力 */
-	input[type="text"] {
-	  padding: 12px;
-	  width: 100%;
-	  max-width: 600px;
-	  border: 1px solid #ccc;
-	  border-radius: 4px;
-	  font-size: 1em;
-	}
-
-	/* ボタン */
-	button {
-	  padding: 10px 16px;
-	  border: none;
-	  border-radius: 4px;
-	  background-color: #eee;
-	  cursor: pointer;
-	  transition: background-color 0.2s;
-	  font-size: 1em;
-	}
-
-	button:hover {
-	  background-color: #ddd;
-	}
-
-	/* 料理名の表示スタイル */
-	.recipe-name {
-	  white-space: normal;
-	  word-break: break-word;
-	  overflow-wrap: anywhere;
-	  max-width: 300px;
-	  font-size: 1em;
-	}
-
-	/* スマホ向けの調整（画面幅が600px以下） */
-	@media (max-width: 600px) {
-	  body {
-		font-size: 20px;
-	  }
-
-	  h1 {
-		font-size: 1.5em;
-	  }
-
-	  input[type="text"] {
-		padding: 20px;
-		font-size: 1.2em;
-		max-width: 90vw;
-	  }
-
-	  button {
-		padding: 16px 20px;
-		font-size: 1.1em;
-	  }
-
-	  .recipe-name {
-		max-width: 90vw;
-		font-size: 1.1em;
-	  }
-
-	  .search-box {
-		flex-direction: column;
-	  }
-	}
-
-
-
-
-
-
-    .filter-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .filter-buttons button.selected {
-      background-color: #ffcc88;
-      font-weight: bold;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
-
-    #favoriteFilterBtn.selected {
-      background-color: gold;
-      color: #333;
-      font-weight: bold;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      vertical-align: top;
-    }
-
-    th {
-      background-color: #f0f0f0;
-      text-align: center;
-    }
-
-    td img {
-      max-width: 100px;
-      border-radius: 4px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .match-rate {
-      font-size: 0.9em;
-      color: #666;
-    }
-
-    .missing {
-      color: red;
-      font-weight: bold;
-    }
-
-    .material.selected-material {
-      color: #0077cc;
-      font-weight: bold;
-      background-color: #e0f0ff;
-      padding: 2px 4px;
-      border-radius: 3px;
-    }
-
-    td:nth-child(6) {
-      text-align: center;
-      font-size: 1.2em;
-      color: #ff9900;
-    }
-
-    @media screen and (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-
-      .search-box {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      input[type="text"] {
-        width: 90%;
-      }
-
-      table, th, td {
-        font-size: 0.9em;
-      }
-
-      td img {
-        max-width: 80px;
-      }
-    }
-	
-	/* 料理名の幅を狭く notepad++の置換神*/
-	.recipe-name {
-	  white-space: normal;
-	  word-break: break-word;
-	  overflow-wrap: anywhere;
-	  max-width: 200px;
-	}
-
-	/* 画面が小さいときは max-width を広げる */
-	@media (max-width: 480px) {
-	  .recipe-name {
-		max-width: 90vw; /* 画面幅の90%まで使う */
-	  }
-	}
-
-	
-	
-	/* 材料の幅を狭く notepad++の置換神*/
-	.material {
-	  max-width: 24em;
-	  white-space: nowrap;
-	  overflow: hidden;
-	  text-overflow: ellipsis;
-	}
-
-	
-	/* 改行処理 */
-	.material {
-	  display: block;
-	  margin-bottom: 4px; /* お好みで余白調整 */
-	}
-
-
-	/* トップに戻るボタン */
-	#backToTop {
-	  position: fixed;
-	  bottom: 30px;
-	  right: 30px;
-	  padding: 16px 24px;     /* ← 横長にしたいならここの値を調整 */
-	  font-size: 18px;        /* ← 文字サイズを大きく */
-	  background-color: #333;
-	  color: #fff;
-	  border: none;
-	  border-radius: 0;       /* ← 角丸なし */
-	  cursor: pointer;
-	  display: none;
-	  z-index: 1000;
-	  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-	  white-space: nowrap;    /* ← 改行させない！ */
-	}
-
-	/* 共通スタイル */
-	#backToTop,
-	#scrollToBottom {
-	  position: fixed;
-	  right: 30px;
-	  padding: 16px 24px;
-	  font-size: 18px;
-	  background-color: #333;
-	  color: #fff;
-	  border: none;
-	  border-radius: 0;
-	  cursor: pointer;
-	  display: none;
-	  z-index: 1000;
-	  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-	  white-space: nowrap;
-	}
-
-	/* トップへ戻るボタン（右下） */
-	#backToTop {
-	  bottom: 30px;
-	}
-
-	/* 一番下へ移動ボタン（右下・少し上） */
-	#scrollToBottom {
-	  bottom: 90px;
-	}
-
-
-	.sort-buttons button {
-	  border: 2px solid white;     /* ← 外枠を赤に */
-	  background-color: #fff;    /* ← 背景は白（任意） */
-	  color: #333;               /* ← 文字色は濃いグレー（任意） */
-	  padding: 10px 16px;
-	  border-radius: 4px;
-	  cursor: pointer;
-	  font-size: 16px;
-	  transition: border-color 0.2s;
-	}
-
-	.sort-buttons button:hover {
-	  border-color: darkred;     /* ← ホバー時に濃い赤に変化（任意） */
-	}
-
-
-
-
-
-
-  /* 選択中の材料（青） */
-  .material.selected-material {
-    color: #0077cc;
-    font-weight: bold;
-    background-color: #e0f0ff;
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-
-  /* 不足している材料（赤） */
-  .material.missing {
+<style>
+/* -------------------- 1. リセットと基本スタイル -------------------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+  font-size: 18px; /* PC向け基本サイズ */
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #444;
+  font-size: 2em;
+}
+
+/* -------------------- 2. 汎用ボタン・フォームスタイル (PC向け基本) -------------------- */
+
+/* 検索ボックスのレイアウト */
+.search-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* テキスト入力 */
+input[type="text"] {
+  padding: 12px;
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+/* 汎用ボタンの基本スタイル */
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 1em;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
+/* -------------------- 3. テーブルとデータ表示スタイル -------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0 0 0 / 5%);
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  vertical-align: top;
+}
+
+th {
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+/* テーブルの1列目 (ID) の幅を最小限に設定 */
+#recipeTable th:nth-child(1),
+#recipeTable td:nth-child(1) {
+    width: 1%;           /* 非常に小さな割合を指定 */
+    white-space: nowrap; /* 内容がはみ出ても折り返さないようにする */
+    text-align: center;  /* IDを中央に寄せる（任意） */
+    padding: 5px;        /* パディングを減らす（任意：最小化のため） */
+}
+
+/* 非表示にする列の統合 */
+#recipeTable th:nth-child(4), #recipeTable td:nth-child(4), /* 「ジャンル」 */
+#recipeTable th:nth-child(5), #recipeTable td:nth-child(5), /* 「画像」 */
+#recipeTable th:nth-child(6), #recipeTable td:nth-child(6), /* 「よく出る」 */
+.hidden-reading { /* 読み仮名 */
+  display: none;
+}
+
+/* お気に入り列のスタイル */
+td:nth-child(6) {
+  text-align: center;
+  font-size: 1.2em;
+  color: #ff9900;
+}
+
+td img {
+  max-width: 100px;
+  border-radius: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* 料理名と材料の表示調整 */
+.recipe-name {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 200px; /* PCでの最大幅 */
+  font-size: 1em;
+}
+
+.material {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* -------------------- 4. フィルターとソートボタンコンテナ -------------------- */
+
+/* 材料ボタンコンテナ */
+#materialButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+/* ソートボタンコンテナ */
+.sort-buttons {
+  margin-bottom: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+/* フィルターボタンコンテナ */
+.filter-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* -------------------- 5. ボタンと要素の状態スタイル -------------------- */
+
+/* 並べ替えボタン（未選択） */
+.sort-buttons button {
+  border: 2px solid white;
+  background-color: #fff;
+  color: #333;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.sort-buttons button:hover {
+  border-color: darkred;
+}
+
+/* 選択中のボタン（材料、ソート） */
+.filter-buttons button.selected,
+#favoriteFilterBtn.selected,
+.sort-buttons button.selected,
+#materialButtons button.selected {
+  background-color: #ffcc66;
+  color: #333;
+  font-weight: bold;
+  border: 1px solid #999;
+  box-shadow: 0 0 5px rgba(0 0 0 / 20%);
+}
+
+/* 材料テキストの選択状態 */
+.material.selected-material {
+  color: #0077cc;
+  font-weight: bold;
+  background-color: #e0f0ff;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* 不足している材料テキスト */
+.material.missing {
+  color: red;
+  font-weight: bold;
+  background-color: #ffe5e5;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.match-rate {
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* 不足材料の一致度欄表示 */
+.match-rate .missing {
     color: red;
     font-weight: bold;
-    background-color: #ffe5e5;
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-
-  /* 不足材料の一致度欄表示 */
-  .match-rate .missing {
     display: inline-block;
     margin-top: 4px;
+}
+
+/* 一致度100%の行 */
+#recipeTable tr.perfect-match {
+  background-color: #fff8dc;
+  box-shadow: inset 0 0 4px rgb(255 204 102 / 60%);
+}
+
+/* -------------------- 6. 詳細/アコーディオン (materialSection) -------------------- */
+
+#materialSection summary {
+  font-size: 1.1em;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #999;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgb(0 0 0 / 10%);
+  transition: background-color 0.2s;
+  list-style: none;
+  display: inline-block;
+  margin-bottom: 30px;
+}
+
+#materialSection[open] {
+  border: 2px solid #ffcc66;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: #fff8dc;
+  margin-bottom: 20px;
+}
+
+/* -------------------- 7. トップ・ボトムボタン -------------------- */
+
+#backToTop,
+#scrollToBottom {
+  position: fixed;
+  right: 30px;
+  padding: 16px 24px;
+  font-size: 18px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  display: none;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+  white-space: nowrap;
+}
+
+#backToTop {
+  bottom: 30px;
+}
+
+#scrollToBottom {
+  bottom: 90px;
+}
+
+/* -------------------- 8. スマホ向け調整 (max-width: 768px) -------------------- */
+
+/* これが一番最後に読み込まれることで、確実にモバイル表示を上書きします */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px; /* 基本フォントサイズを小さく */
+    padding: 10px;
   }
 
-  /* ★ボタンの選択状態 */
-  #favoriteFilterBtn.selected {
-    background-color: gold;
-    color: #333;
-    font-weight: bold;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  h1 {
+    font-size: 1.5em;
   }
 
-  /* お気に入り列のスタイル */
-  td:nth-child(6) {
-    text-align: center;
-    font-size: 1.2em;
-    color: #ff9900;
-  }
-  
-
-
-  /* 並べ替えボタン */
-	.sort-buttons {
-	  margin-bottom: 10px;
-	  display: flex;
-	  gap: 8px;
-	}
-
-  /* 個数の多いボタンの色変える */
-	.filter-buttons button.selected {
-	  background-color: #ffcc66;
-	  color: #333;
-	  font-weight: bold;
-	  border: 1px solid #999;
-	}
-
-  
-
-	@media screen and (max-width: 768px) {
-	  .filter-buttons {
-		justify-content: center;
-	  }
-
-	.filter-buttons button {
-	  width: 100px;              /* ← 完全固定幅 */
-	  flex: none;                /* ← 自動調整を無効化 */
-	  white-space: nowrap;       /* ← テキストの折り返し防止 */
-	  overflow: hidden;          /* ← はみ出た文字を隠す（任意） */
-	  text-overflow: ellipsis;   /* ← はみ出た文字を「…」で省略（任意） */
-	  padding: 6px 10px;
-	  margin: 4px;
-	  font-size: 0.9em;
-	  box-sizing: border-box;
-	}
-
-
-	.filter-buttons {
-	  display: grid;
-	  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-	  gap: 8px;
-	  justify-content: center;
-	  margin-bottom: 20px;
-	}
-
-	.filter-buttons button {
-	  padding: 8px 12px;
-	  white-space: nowrap;
-	  border: none;
-	  border-radius: 4px;
-	  background-color: #eee;
-	  cursor: pointer;
-	  transition: background-color 0.2s;
-	}
-
-	
-
-
-    .search-box {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    input[type="text"] {
-      width: 90%;
-    }
-
-    table, th, td {
-      font-size: 0.9em;
-    }
-
-    td img {
-      max-width: 80px;
-    }
-
-    .filter-buttons {
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .filter-buttons button {
-      width: 90%;
-      margin: 4px 0;
-    }
+  /* 検索窓 */
+  input[type="text"] {
+    padding: 16px;
+    font-size: 1.1em;
+    width: 90%;
+    max-width: 100%;
   }
   
-	.hidden-reading {
-	display: none;
-	}
-	
+  .search-box {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .recipe-name {
+    max-width: 90vw; /* 画面幅いっぱいに広げる */
+  }
+  
+  table, th, td {
+    font-size: 0.85em;
+  }
 
-	#materialButtons {
-	  display: flex;
-	  flex-wrap: wrap;
-	  gap: 8px;
-	  justify-content: flex-start; /* 左寄せ（任意） */
-	  margin-bottom: 20px;
-	}
+  /* ↓↓↓ 全てのボタンを小さくするモバイル設定 ↓↓↓ */
 
-	#materialButtons button {
-	  white-space: nowrap;
-	  overflow: visible;
-	  text-overflow: unset;
-	  max-width: none;
-	  padding: 12px 18px;
-	  font-size: 16px;
-	  line-height: 1.4;
-	  border-radius: 6px;
-	  background-color: #f0f0f0;
-	  border: 1px solid #ccc;
-	  cursor: pointer;
-	  box-sizing: border-box;
-	  transition: background-color 0.2s, box-shadow 0.2s;
-	}
+  /* 材料ボタン */
+  #materialButtons button,
+  #materialButtons button.selected,
+  #materialButtons button.frequent {
+    padding: 5px 8px;
+    font-size: 11px;
+    line-height: 1;
+  }
 
-	/* 選択された材料ボタン（元の黄色スタイル） */
-	#materialButtons button.selected {
-	  background-color: #ffcc66;
-	  color: #333;
-	  font-weight: bold;
-	  border: 1px solid #999;
-	  box-shadow: 0 0 5px rgba(0,0,0,0.2);
-	}
+  /* ソート・フィルター・クリアボタン */
+  .sort-buttons button,
+  .filter-buttons button,
+  #favoriteFilterBtn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  
+  /* トップ/ボトムボタン */
+  #backToTop,
+  #scrollToBottom {
+    padding: 10px 16px;
+    font-size: 14px;
+    right: 15px;
+  }
+  #scrollToBottom {
+    bottom: 60px;
+  }
+  
+  /* ↑↑↑ モバイル設定ここまで ↑↑↑ */
 
-
-
-	/* 一致度100%の行に黄色系の背景色 */
-	#recipeTable tr.perfect-match {
-	  background-color: #fff8dc; /* 薄い黄色（cornsilk） */
-	  box-shadow: inset 0 0 4px rgba(255, 204, 102, 0.6);
-	}
-
-
-
-	.sort-buttons button.selected {
-	  background-color: #ffcc66;
-	  color: #333;
-	  font-weight: bold;
-	  border: 1px solid #999;
-	  box-shadow: 0 0 5px rgba(0,0,0,0.2);
-	}
-
-
-
-	#materialSection summary {
-	  font-size: 1.1em;
-	  font-weight: bold;
-	  background-color: #f0f0f0;
-	  color: #333;
-	  padding: 12px 16px;
-	  border-radius: 6px;
-	  border: 1px solid #999;
-	  cursor: pointer;
-	  box-shadow: 0 0 4px rgba(0,0,0,0.1);
-	  transition: background-color 0.2s;
-	  list-style: none; /* ブラウザによっては矢印を消す */
-	  display: inline-block;
-	  margin-bottom: 30px
-	}
-
-
-	#materialSection[open] {
-	  border: 2px solid #ffcc66;
-	  border-radius: 6px;
-	  padding: 10px;
-	  background-color: #fff8dc; /* 薄い黄色 */
-	  margin-bottom: 20px;
-	}
-
-
-
-
-  </style>
+  /* フィルターボタンの配置（スマホ向け） */
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    /* grid設定をflexで上書きして、よりシンプルなレイアウトに */
+  }
+}
+</style>
   
   
   
@@ -2941,8 +2744,7 @@
 
 <script>
   let materialSortMode = 'count'; // 材料ボタンの並び順（出現回数 or 名前）
-  let currentSortMode = 'id';     // レシピの並び順（id or name）
-
+  let currentSortMode = 'id';      // レシピの並び順（id or name）
 
   function normalizeMaterialName(text) {
     return text
@@ -2950,7 +2752,6 @@
       .replace(/^[^\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]+/gu, '')
       .trim();
   }
-
 
   const selectedMaterials = new Set();
   let favoriteFilterActive = false;
@@ -2962,27 +2763,25 @@
 
   function generateMaterialButtons() {
     const materialCount = {};
-	document.querySelectorAll('#recipeTable .material').forEach(span => {
-	const raw = normalizeMaterialName(span.textContent);
+    document.querySelectorAll('#recipeTable .material').forEach(span => {
+      const raw = normalizeMaterialName(span.textContent);
 
-	  if (raw !== '') {
-		materialCount[raw] = (materialCount[raw] || 0) + 1;
-	  }
-	});
+      if (raw !== '') {
+        materialCount[raw] = (materialCount[raw] || 0) + 1;
+      }
+    });
 
+    const materials = Object.keys(materialCount);
 
-	const materials = Object.keys(materialCount);
-
-	let sortedMaterials;
-	if (materialSortMode === 'name') {
-	  sortedMaterials = materials.sort((a, b) => a.localeCompare(b, 'ja'));
-	} else {
-	  sortedMaterials = materials.sort((a, b) => {
-		const diff = materialCount[b] - materialCount[a];
-		return diff !== 0 ? diff : a.localeCompare(b, 'ja');
-	  });
-	}
-
+    let sortedMaterials;
+    if (materialSortMode === 'name') {
+      sortedMaterials = materials.sort((a, b) => a.localeCompare(b, 'ja'));
+    } else {
+      sortedMaterials = materials.sort((a, b) => {
+        const diff = materialCount[b] - materialCount[a];
+        return diff !== 0 ? diff : a.localeCompare(b, 'ja');
+      });
+    }
 
     const topMaterials = Object.entries(materialCount)
       .sort((a, b) => b[1] - a[1])
@@ -3002,12 +2801,8 @@
       container.appendChild(btn);
     });
 
-    const favBtn = document.getElementById('favoriteFilterBtn');
-    favBtn.onclick = () => {
-      favoriteFilterActive = !favoriteFilterActive;
-      favBtn.classList.toggle('selected', favoriteFilterActive);
-      filterAndSortRecipes();
-    };
+    // 🔴 修正点1: お気に入りボタンのイベント設定をここから削除しました。
+    // その代わり、スクリプトの最後に一度だけ設定されます。
   }
 
   function toggleMaterial(button, mat) {
@@ -3022,8 +2817,6 @@
     filterAndSortRecipes();
   }
 
-
-
   function filterAndSortRecipes() {
     const keyword = document.getElementById('keyword').value.trim().toLowerCase();
     const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
@@ -3036,7 +2829,7 @@
       const genreList = genreRaw.split(',').map(g => g.trim());
       const favorite = row.cells[5].textContent.trim();
       const materialSpans = row.querySelectorAll('.material');
-	  const materialList = Array.from(materialSpans).map(span => normalizeMaterialName(span.textContent));
+      const materialList = Array.from(materialSpans).map(span => normalizeMaterialName(span.textContent));
 
       const matched = materialList.filter(m => selectedMaterials.has(m));
       const missing = Array.from(selectedMaterials).filter(m => !materialList.includes(m));
@@ -3048,8 +2841,8 @@
         matchRateCell.innerHTML += `<br><span class="missing">不要: ${missing.join(', ')}</span>`;
       }
 
-	materialSpans.forEach(span => {
-	  const matName = normalizeMaterialName(span.textContent);
+      materialSpans.forEach(span => {
+        const matName = normalizeMaterialName(span.textContent);
 
         span.classList.toggle('selected-material', selectedMaterials.has(matName));
         span.classList.remove('missing');
@@ -3063,18 +2856,18 @@
       const shouldShow = keywordMatch && materialMatch && favoriteMatch;
       row.classList.toggle('hidden', !shouldShow);
 
-		if (shouldShow) {
-		  row.dataset.matchScore = matched.length;
+      if (shouldShow) {
+        row.dataset.matchScore = matched.length;
 
-		  // 一致度100%ならクラス追加
-		  if (selectedMaterials.size > 0 && matched.length === selectedMaterials.size) {
-			row.classList.add('perfect-match');
-		  } else {
-			row.classList.remove('perfect-match');
-		  }
+        // 一致度100%ならクラス追加
+        if (selectedMaterials.size > 0 && matched.length === selectedMaterials.size) {
+          row.classList.add('perfect-match');
+        } else {
+          row.classList.remove('perfect-match');
+        }
 
-		  filteredRows.push(row);
-		}
+        filteredRows.push(row);
+      }
 
     });
 
@@ -3107,10 +2900,6 @@
     filterAndSortRecipes();
   }
 
-
-
-
-
   generateMaterialButtons();
   filterAndSortRecipes();
 
@@ -3133,30 +2922,29 @@
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   });
 
-	document.querySelectorAll('.sort-buttons button').forEach(btn => {
-	  btn.addEventListener('click', () => {
-		// 全ボタンから .selected を外す
-		document.querySelectorAll('.sort-buttons button').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.sort-buttons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // 全ボタンから .selected を外す
+      document.querySelectorAll('.sort-buttons button').forEach(b => b.classList.remove('selected'));
 
-		// 押したボタンに .selected を付ける
-		btn.classList.add('selected');
+      // 押したボタンに .selected を付ける
+      btn.classList.add('selected');
 
-		// 並び替えモードを更新
-		if (btn.id === 'sortRecipesById') {
-		  currentSortMode = 'id';
-		} else if (btn.id === 'sortRecipesByName') {
-		  currentSortMode = 'name';
-		} else if (btn.id === 'sortMaterialsByName') {
-		  materialSortMode = 'name';
-		} else if (btn.id === 'sortMaterialsByCount') {
-		  materialSortMode = 'count';
-		}
+      // 並び替えモードを更新
+      if (btn.id === 'sortRecipesById') {
+        currentSortMode = 'id';
+      } else if (btn.id === 'sortRecipesByName') {
+        currentSortMode = 'name';
+      } else if (btn.id === 'sortMaterialsByName') {
+        materialSortMode = 'name';
+      } else if (btn.id === 'sortMaterialsByCount') {
+        materialSortMode = 'count';
+      }
 
-		filterAndSortRecipes();
-		generateMaterialButtons();
-	  });
-	});
-
+      filterAndSortRecipes();
+      generateMaterialButtons();
+    });
+  });
 
   document.querySelectorAll('.filter-buttons button').forEach(button => {
     button.addEventListener("click", () => {
@@ -3164,10 +2952,15 @@
       filterAndSortRecipes();
     });
   });
-  
-  
 
-  
+  // 🔴 修正点2: お気に入りボタンのイベント設定をここに移動しました。
+  // スクリプトの初期化時、一度だけ実行されます。
+  const favoriteFilterBtn = document.getElementById('favoriteFilterBtn');
+  favoriteFilterBtn.addEventListener('click', () => {
+      favoriteFilterActive = !favoriteFilterActive;
+      favoriteFilterBtn.classList.toggle('selected', favoriteFilterActive);
+      filterAndSortRecipes();
+  });
 </script>
 
 </body>
