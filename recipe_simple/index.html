@@ -131,6 +131,7 @@ th {
 #recipeTable th:nth-child(4), #recipeTable td:nth-child(4), /* 「ジャンル」 */
 #recipeTable th:nth-child(5), #recipeTable td:nth-child(5), /* 「画像」 */
 #recipeTable th:nth-child(6), #recipeTable td:nth-child(6), /* 「よく出る」 */
+#recipeTable th:nth-child(7), #recipeTable td:nth-child(7), /* 「一致度」 */
 .hidden-reading { /* 読み仮名 */
   display: none;
 }
@@ -397,7 +398,7 @@ td img {
 
 
 		<div style="text-align: right;">
-			最終更新日　20:49 --2025/11/17 <br>
+			最終更新日　20:28 --2025/12/14 <br>
 			<a href="update.html">ログ</a>
 		</div>
 
@@ -420,22 +421,22 @@ td img {
 
 <div class="search-box">
   <input type="text" id="keyword" placeholder="キーワード検索">
+  <button>🔎</button>
   <button onclick="clearFilters()">条件クリア</button>
 </div>
 
 
 
-<details id="materialSection">
+<details id="materialSection" hidden>
   <summary>材料で絞り込む</summary>
-  
+
   <div id="sortButtons" class="sort-buttons">
-  <button onclick="setMaterialSort('name')">名前順（漢字非対応）</button>
-  <button onclick="setMaterialSort('count')">出現数順</button>
+    <button onclick="setMaterialSort('name')">名前順（漢字非対応）</button>
+    <button onclick="setMaterialSort('count')">出現数順</button>
   </div>
-  
+
   <div id="materialButtons" class="filter-buttons"></div>
 </details>
-
 
 
 
@@ -3294,3 +3295,4 @@ td img {
 </script>
 
 </body>
+
