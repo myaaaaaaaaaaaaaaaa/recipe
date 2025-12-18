@@ -6,6 +6,17 @@ csvで出力できるようになったからAIに投げても良い
 
 # recipe
 
-https://myaaaaaaaaaaaaaaaa.github.io/recipe/recipe/index.html
-
 https://myaaaaaaaaaaaaaaaa.github.io/recipe/recipe_simple/index.html
+
+
+
+
+
+
+
+
+
+# 参考
+
+
+https://myaaaaaaaaaaaaaaaa.github.io/recipe/recipe/index.html
