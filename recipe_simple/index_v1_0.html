@@ -98,83 +98,73 @@ button:hover {
   background-color: #ddd;
 }
 
-/* -------------------- 3. データ表示スタイル（画像付き2列カード） ここ余計な変更をすると検索がおかしくなる　バーに入れた文字の含むものが消える　とかが起きる　注意 -------------------- */
-#recipeTable { display: block; width: 100%; }
-#recipeTable thead { display: none; }
+/* -------------------- 3. テーブルとデータ表示スタイル -------------------- */
 
-#recipeTable tbody {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(50% - 15px), 1fr));
-  gap: 20px;
-  padding: 15px 0;
-}
-
-#recipeTable tr {
-  display: flex; /* 縦並びにするためflexに変更 */
-  flex-direction: column;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  position: relative;
-  overflow: hidden; /* 画像の角を丸めるため */
-  border: 1px solid #eee;
-  transition: transform 0.2s;
-  cursor: pointer;
-}
-
-#recipeTable tr:hover { transform: translateY(-5px); }
-
-/* --- 画像（5列目）を一番上に --- */
-#recipeTable td:nth-child(5) {
-  display: block !important; /* 表示させる */
-  order: -1; /* 一番上へ */
+table {
   width: 100%;
-  height: 180px;
-}
-#recipeTable td img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* 枠に合わせて切り抜き */
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0 0 0 / 5%);
 }
 
-/* 料理名とお気に入り用のコンテナ（tdを調整） */
-#recipeTable td:nth-child(2) {
-  padding: 15px;
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  vertical-align: top;
 }
-.recipe-name {
-  font-weight: bold;
-  font-size: 1.2em;
-  color: #333;
-  text-decoration: none;
-}
-.recipe-name a { color: inherit; text-decoration: none; }
 
-/* IDバッジ */
+th {
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+/* テーブルの1列目 (ID) の幅を最小限に設定 */
+#recipeTable th:nth-child(1),
 #recipeTable td:nth-child(1) {
-  position: absolute; top: 10px; left: 10px;
-  background: rgba(0,0,0,0.6); color: #fff;
-  padding: 2px 8px; border-radius: 4px; font-size: 0.7em;
-  z-index: 2;
+    width: 1%;           /* 非常に小さな割合を指定 */
+    white-space: nowrap; /* 内容がはみ出ても折り返さないようにする */
+    text-align: center;  /* IDを中央に寄せる（任意） */
+    padding: 5px;        /* パディングを減らす（任意：最小化のため） */
 }
 
-/* お気に入り */
-#recipeTable td:nth-child(6) {
-  position: absolute; top: 190px; right: 15px; /* 画像の下あたり */
-  font-size: 1.5em;
+/* 非表示にする列の統合 */
+#recipeTable th:nth-child(4), #recipeTable td:nth-child(4), /* 「ジャンル」 */
+#recipeTable th:nth-child(5), #recipeTable td:nth-child(5), /* 「画像」 */
+#recipeTable th:nth-child(6), #recipeTable td:nth-child(6), /* 「よく出る」 */
+#recipeTable th:nth-child(7), #recipeTable td:nth-child(7), /* 「一致度」 */
+.hidden-reading { /* 読み仮名 */
+  display: none;
 }
 
-/* --- JS用の隠し設定（絶対に消さない！） --- */
-#recipeTable td:nth-child(3), #recipeTable td:nth-child(4),
-#recipeTable td:nth-child(7), .hidden-reading {
-  visibility: hidden; position: absolute; width: 0; height: 0;
+/* お気に入り列のスタイル */
+td:nth-child(6) {
+  text-align: center;
+  font-size: 1.2em;
+  color: #ff9900;
 }
 
-#recipeTable tr.hidden { display: none !important; }
-
-@media (max-width: 600px) {
-  #recipeTable tbody { grid-template-columns: 1fr; }
+td img {
+  max-width: 100px;
+  border-radius: 4px;
 }
 
+.hidden {
+  display: none;
+}
+
+/* 料理名と材料の表示調整 */
+.recipe-name {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 200px; /* PCでの最大幅 */
+  font-size: 1em;
+}
+
+.material {
+  display: block;
+  margin-bottom: 4px;
+}
 
 /* -------------------- 4. フィルターとソートボタンコンテナ -------------------- */
 
@@ -408,13 +398,10 @@ button:hover {
 
 
 		<div style="text-align: right;">
-			最終更新日　20:28 --2025/12/14 <br>
-			
-			決定回避の法則を加味し、選択肢を減らす<br>
-			
+			最終更新日　9:55-- 2025/12/18 <br>
 			<a href="update.html">ログ</a>
 			<font size = 6>
-			<a href="index_v1_0.html">昔の形式</a>
+			<a href="index.html">最新の形式</a>
 			</font>
 		</div>
 
@@ -422,7 +409,7 @@ button:hover {
 
 
 
-<h1>レシピ検索</h1>
+<h1>レシピ検索（Ver_1.013）</h1>
 
 <button id="backToTop">↑ トップへ</button>
 <button id="scrollToBottom">↓ 一番下へ</button>
@@ -3308,16 +3295,6 @@ button:hover {
       favoriteFilterBtn.classList.toggle('selected', favoriteFilterActive);
       filterAndSortRecipes();
   });
-  
-  
-  // テーブル内の行（tr）をクリックしたら、その中のリンク先へ飛ばす
-document.querySelector('#recipeTable tbody').addEventListener('click', (e) => {
-  const tr = e.target.closest('tr');
-  if (tr) {
-    const link = tr.querySelector('.recipe-name a');
-    if (link) link.click();
-  }
-});
 </script>
 
 </body>
