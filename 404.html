@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レシピ未登録 - 準備中</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 30px; border-radius: 10px; }
+        h1 { color: #f39c12; }
+        p { line-height: 1.6; }
+        .btn { display: none; margin-top: 20px; padding: 15px 25px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .btn:hover { background: #2ecc71; }
+        .status-msg { font-weight: bold; color: #e67e22; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="recipe-title">お探しのレシピ</h1>
+    <div id="status-container" class="status-msg">確認中...</div>
+    <p id="description">URLが正しいか、もう一度ご確認ください。</p>
+    
+    <a id="input-link" class="btn" href="#">このレシピの内容を入力する</a>
+    
+    <div style="margin-top: 40px;">
+        <a href="/recipe/recipe_simple/index.html" style="color: #666;">一覧に戻る</a>
+    </div>
+</div>
+
+<script>
+    // 1. レシピデータの定義（hasContentがtrueなら材料あり、falseなら未登録）
+    const recipes = {
+        "001": { name: "生姜焼き", hasContent: true },
+        "002": { name: "マーボー豆腐", hasContent: true },
+        "003": { name: "ロールキャベツ", hasContent: true },
+        "004": { name: "カレー", hasContent: true },
+        "005": { name: "焼きそば", hasContent: true },
+        "006": { name: "グラタン", hasContent: false },
+        "007": { name: "かぼちゃスープ", hasContent: false },
+        "008": { name: "回鍋肉（クックドゥー）", hasContent: true },
+        "009": { name: "シチュー", hasContent: true },
+        "010": { name: "野菜肉炒め", hasContent: false },
+        "011": { name: "肉じゃが", hasContent: false },
+        "012": { name: "つみれとキャベツのコンソメ煮", hasContent: false },
+        "013": { name: "特製からあげ", hasContent: false },
+        "014": { name: "特製オムライス", hasContent: false },
+        "015": { name: "青椒肉絲（クックドゥー）", hasContent: true },
+        "016": { name: "チャーハン", hasContent: false },
+        "017": { name: "なっとうチャーハン", hasContent: false },
+        "018": { name: "親子丼", hasContent: false },
+        "019": { name: "サラダ", hasContent: false },
+        "020": { name: "みそ汁（なめこ＆とうふ）", hasContent: false },
+        "021": { name: "みそ汁（大根＆とうふ）", hasContent: false },
+        "022": { name: "みそ汁（キャベツ、ニンジン）", hasContent: false },
+        "023": { name: "みそ汁（じゃがいも）", hasContent: false },
+        "024": { name: "みそ汁（わかめ、とうふ）", hasContent: false },
+        "025": { name: "みそ汁（玉ネギ、じゃがいも）", hasContent: false },
+        "026": { name: "みそ汁（小松菜、大根、豆？）", hasContent: false },
+        "027": { name: "みそ汁（たまご、大根、玉ネギ、あぶらあげ）", hasContent: false },
+        "028": { name: "ささみでチーズパン粉焼き", hasContent: false },
+        "029": { name: "八宝菜（ブタ肉）", hasContent: true },
+        "030": { name: "塩だれ回鍋肉", hasContent: true },
+        "031": { name: "ブタ肉だいこん", hasContent: false },
+        "032": { name: "白菜のクリーム煮", hasContent: false },
+        "033": { name: "冷しゃぶ", hasContent: true },
+        "034": { name: "かぼちゃコロッケ（手作り）", hasContent: false },
+        "035": { name: "ハヤシライス", hasContent: false },
+        "036": { name: "なべ", hasContent: false },
+        "037": { name: "マーボーナス", hasContent: true },
+        "038": { name: "とりにくガリバタチキン", hasContent: false },
+        "039": { name: "海鮮あんかけ", hasContent: false },
+        "040": { name: "うま塩海老＆いか、ブロッコリー", hasContent: false },
+        "041": { name: "ブタ肉×白菜いため煮", hasContent: false },
+        "042": { name: "とんかつ（手作り）", hasContent: false },
+        "043": { name: "あつあげほろ煮", hasContent: false },
+        "044": { name: "しゃけのムニエル", hasContent: false },
+        "045": { name: "すぶた（クックドゥー）", hasContent: true },
+        "046": { name: "なすのあげびたし", hasContent: false },
+        "047": { name: "冷やし中華", hasContent: true },
+        "048": { name: "ラーメン", hasContent: false },
+        "049": { name: "たまごとじうどん", hasContent: false },
+        "050": { name: "たきこみごはん", hasContent: false },
+        "051": { name: "レバニラ（卵）いため", hasContent: false },
+        "052": { name: "ハンバーグ（手作り）", hasContent: false },
+        "053": { name: "焼肉", hasContent: false },
+        "054": { name: "チキン南ばん", hasContent: false },
+        "055": { name: "ぶたたまどん", hasContent: false },
+        "056": { name: "フライドチキン", hasContent: false },
+        "057": { name: "すきやき", hasContent: false },
+        "058": { name: "ぶり大根", hasContent: false },
+        "059": { name: "天プラ", hasContent: false },
+        "060": { name: "パスタ", hasContent: false },
+        "061": { name: "マカロニグラタン", hasContent: false },
+        "062": { name: "タラのにつけ", hasContent: false },
+        "063": { name: "おぞうに", hasContent: false },
+        "064": { name: "魚（ほっけ、カレイ、さば等）", hasContent: false },
+        "065": { name: "とんどん", hasContent: false },
+        "066": { name: "がんも焼", hasContent: false },
+        "067": { name: "ちくわチーズのり焼き", hasContent: false },
+        "068": { name: "とりむね肉", hasContent: false },
+        "069": { name: "タラのにつけ（重複）", hasContent: false },
+        "070": { name: "おぞうに（重複）", hasContent: false },
+        "071": { name: "大根とあつあげブロッコリー", hasContent: false },
+        "072": { name: "ぬかじき煮つけ", hasContent: false },
+        "073": { name: "カレイの煮つけ", hasContent: false },
+        "074": { name: "厚揚げ大根いんげん", hasContent: false },
+        "075": { name: "玉子玉ねぎやき", hasContent: false },
+        "076": { name: "ぎょうざのかわつつみ", hasContent: false },
+        "077": { name: "はるまき（手作り）", hasContent: false },
+        "078": { name: "いもっち", hasContent: false },
+        "079": { name: "こうやどうふ", hasContent: false },
+        "080": { name: "コンソメスープ", hasContent: false },
+        "081": { name: "ハッシュポテト", hasContent: false },
+        "082": { name: "油林ちー", hasContent: false },
+        "083": { name: "にこみハンバーグ", hasContent: false },
+        "084": { name: "てりやき（鶏むね肉）", hasContent: false },
+        "085": { name: "はる人参と牛肉のピラフ", hasContent: false },
+        "086": { name: "和風パスタ", hasContent: false },
+        "087": { name: "３色ドン", hasContent: false },
+        "088": { name: "ピーマンチーズ肉堤", hasContent: false },
+        "089": { name: "チキテキ", hasContent: false },
+        "090": { name: "ポトフ", hasContent: false },
+        "091": { name: "給食味のミネストローネ", hasContent: false },
+        "092": { name: "しゅうまい", hasContent: false },
+        "093": { name: "おかかあえ", hasContent: false },
+        "094": { name: "春雨のサラダ", hasContent: false },
+        "095": { name: "スパゲティサラダ", hasContent: false },
+        "096": { name: "レタスとツナときゅうりの何か", hasContent: false },
+        "097": { name: "シュウマイ", hasContent: true },
+        "999": { name: "しょっぱい卵焼き", hasContent: false },
+        "098": { name: "給食の春雨サラダ", hasContent: true },
+        "099": { name: "スパゲッティサラダ", hasContent: true },
+        "100": { name: "肉じゃが", hasContent: true },
+        "101": { name: "バナナ蒸しパン", hasContent: true },
+        "102": { name: "コールスロー", hasContent: true },
+        "103": { name: "豚バラにらもやし炒め", hasContent: true },
+        "104": { name: "ピーマンの肉詰め", hasContent: true },
+        "105": { name: "春巻き", hasContent: true },
+        "106": { name: "ほうれん草ベーコンしめじパスタ", hasContent: true },
+        "107": { name: "かぼちゃ煮", hasContent: true },
+        "108": { name: "定食屋さん風の野菜炒め", hasContent: true },
+        "109": { name: "簡単＊じゃがいもコロッケ", hasContent: true },
+        "110": { name: "鶏の照り焼き", hasContent: true },
+        "111": { name: "豚ひき肉と野菜のトマト煮込み", hasContent: true },
+        "112": { name: "とろたま豚丼", hasContent: true },
+        "113": { name: "もやしのすき焼き風", hasContent: true },
+        "114": { name: "謎パン", hasContent: true },
+        "115": { name: "豚肉とナスの塩炒め", hasContent: true },
+        "116": { name: "ニンジンのグラッセ", hasContent: true },
+        "117": { name: "基本のアジフライ", hasContent: true },
+        "118": { name: "とろふわ卵中華丼", hasContent: true },
+        "119": { name: "具だくさん！豚汁", hasContent: true },
+        "120": { name: "ほうれんそうと卵のスープ", hasContent: true },
+        "121": { name: "簡単☆おかか和え", hasContent: true },
+        "122": { name: "かぼちゃコロッケ", hasContent: true },
+        "123": { name: "レバニラ炒め", hasContent: true },
+        "124": { name: "大根と厚揚げの煮物", hasContent: true },
+        "125": { name: "甘辛の豚バラ大根", hasContent: true }
+    };
+
+    // 2. URL解析と表示制御
+    const path = window.location.pathname;
+    const match = path.match(/recipe_(\d{3})\.html/);
+
+    if (match) {
+        const id = match[1];
+        const recipe = recipes[id];
+
+        if (recipe) {
+            document.getElementById('recipe-title').innerText = "レシピ名：「" + recipe.name + "」";
+
+            if (recipe.hasContent) {
+                // 事実：材料はあるがHTMLがない（無駄打ち防止）
+                document.getElementById('status-container').innerText = "【ページ作成中】";
+                document.getElementById('description').innerText = "このレシピの材料はすでに登録されています。現在、閲覧用ページを作成中ですので、公開までお待ちください。";
+                document.getElementById('input-link').style.display = "none";
+            } else {
+                // 事実：材料自体が未登録（入力へ誘導）
+                document.getElementById('status-container').innerText = "【内容未登録】";
+                document.getElementById('description').innerText = "このレシピの材料や作り方の情報はまだありません。もしご存知でしたら教えてください！";
+
+                const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
+                const entryId = "entry.1741580971"; 
+                const finalUrl = formBase + "?" + entryId + "=" + encodeURIComponent(recipe.name);
+
+                const linkBtn = document.getElementById('input-link');
+                linkBtn.href = finalUrl;
+                linkBtn.style.display = "inline-block";
+            }
+        } else {
+            document.getElementById('status-container').innerText = "対象のレシピが見つかりませんでした。";
+        }
+    } else {
+        document.getElementById('status-container').innerText = "不正なアクセス、またはページが存在しません。";
+    }
+</script>
+
+</body>
+</html>
