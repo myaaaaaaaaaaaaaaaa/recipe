@@ -170,18 +170,24 @@
         if (recipe) {
             document.getElementById('recipe-title').innerText = "レシピ名：「" + recipe.name + "」";
 
-            // フォームURLの組み立て（特定したIDを適用）
-            const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-            const nameEntryId = "entry.934654902"; // レシピ名の正しいID
-            const ingEntryId = "entry.1179458958"; // 材料の正しいID
-            
-            let finalUrl = formBase + "?" + nameEntryId + "=" + encodeURIComponent(recipe.name);
-            if (recipe.ing) {
-                finalUrl += "&" + ingEntryId + "=" + encodeURIComponent(recipe.ing);
-            }
+			// フォームURLの組み立て（特定したIDを適用）
+			const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
 
-            const linkBtn = document.getElementById('input-link');
-            linkBtn.href = finalUrl;
+			// 各項目のentry ID（判明したものを入力）
+			const idEntryId   = "entry.834953376";   // レシピID（新しく判明したID）
+			const nameEntryId = "entry.934654902";   // レシピ名
+			const ingEntryId  = "entry.1179458958";  // 材料
+
+			// リンクの組み立て（IDを最初に入れる）
+			let finalUrl = formBase + "?" + idEntryId + "=" + id; 
+			finalUrl += "&" + nameEntryId + "=" + encodeURIComponent(recipe.name);
+
+			if (recipe.ing) {
+				finalUrl += "&" + ingEntryId + "=" + encodeURIComponent(recipe.ing);
+			}
+
+			const linkBtn = document.getElementById('input-link');
+			linkBtn.href = finalUrl;
             linkBtn.style.display = "inline-block";
 
             if (recipe.hasContent) {
@@ -191,7 +197,7 @@
                 linkBtn.style.background = "#2980b9"; 
             } else {
                 document.getElementById('status-container').innerText = "【内容未登録】";
-                document.getElementById('description').innerText = "このレシピの材料や作り方の情報がまだありません。教えていただけると助かります！";
+                document.getElementById('description').innerText = "このレシピの材料や作り方の情報がまだありません。教えていただけると助かります！まだ動かない！";
                 linkBtn.innerText = "このレシピの内容を入力する";
                 linkBtn.style.background = "#27ae60"; 
             }
