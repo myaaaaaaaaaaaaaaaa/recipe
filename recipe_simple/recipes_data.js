@@ -1756,5 +1756,5 @@ const RECIPE_LIST = [
     "genre": "和食",
     "favorite": "",
     "methods": []
-  },
-  ];
+  }
+];
