@@ -142,33 +142,37 @@ function editThisRecipe(recipeId) {
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
     
+    // 1. まずは「材料」と「作り方」も含めてURLを作ってみる
     const materials = (recipe.materials || []).join("\n");
     const methods = (recipe.methods || []).join("\n");
     
     const params = new URLSearchParams();
-    params.append("entry.834953376", recipe.id);
-    params.append("entry.934654902", recipe.name);
-    params.append("entry.1286608741", recipe.reading || "");
+    params.append("entry.834953376", recipe.id);          // ID
+    params.append("entry.934654902", recipe.name);        // レシピ名
+    params.append("entry.1286608741", recipe.reading || ""); // ふりがな
     params.append("entry.1179458958", materials);
     params.append("entry.811488190", methods);
 
-    const fullUrl = `${formBase}?${params.toString()}`;
+    let fullUrl = `${formBase}?${params.toString()}`;
 
-    // URLが長すぎる（2000文字超）場合の判定
+    // 2. もし2000文字を超えていたら、中身（材料・作り方）を削って再構成する
     if (fullUrl.length > 2000) {
-        alert("解説が長文のため、中身の自動入力が制限されます。\n別タブでフォームを開きますので、元のページの情報をコピーして貼り付けてください。");
+        alert("解説が長文のため、材料と作り方の自動入力はスキップします。\nID、名前、ふりがなは自動入力されますので、残りは元のページからコピーしてください。");
+        
         const safeParams = new URLSearchParams();
         safeParams.append("entry.834953376", recipe.id);
-        // 別タブで開く（IDのみ）
-        window.open(`${formBase}?${safeParams.toString()}`, '_blank');
+        safeParams.append("entry.934654902", recipe.name);
+        safeParams.append("entry.1286608741", recipe.reading || "");
+        // 材料と作り方はあえて送らない（空にする）
+        
+        fullUrl = `${formBase}?${safeParams.toString()}`;
     } else {
-        if (window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) {
-            // 別タブで開く（全データ入り）
-            window.open(fullUrl, '_blank');
-        }
+        if (!window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) return;
     }
-}
 
+    // 別タブで開く
+    window.open(fullUrl, '_blank');
+}
 
 function showMeTheRecipe(recipe) {
     // 既存のコンテンツ（検索窓、テーブル、そして材料ボタンすべて）を隠す
