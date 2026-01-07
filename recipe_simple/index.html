@@ -8,12 +8,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+	<link rel="icon" href="images/favicon.ico" type="image/x-icon">
 
   <title>レシピ検索</title>
 
 
 		<div style="text-align: right;">
-			最終更新日　あ <br>
+			最終更新日　0:12 --2026/01/02 <br>
 			
 			決定回避の法則を加味し、選択肢を減らす<br>
 			
@@ -25,7 +26,156 @@
 
 
 
+<script src="recipes_data.js"></script>
+<script>
+
+// --- 1. 詳細表示と遷移のロジック ---
+
+function goToRecipeDetail(recipeId) {
+    const recipe = RECIPE_LIST.find(r => r.id === recipeId);
+    // 材料と作り方が両方あるか判定
+    const hasContent = recipe && 
+                       recipe.materials && recipe.materials.length > 0 && 
+                       recipe.methods && recipe.methods.length > 0;
+
+    if (hasContent) {
+        showMeTheRecipe(recipe); 
+    } else {
+        const message = `「${recipe ? recipe.name : "このレシピ"}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
+        if (window.confirm(message)) {
+            const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
+            const idEntry = "entry.834953376=" + recipeId;
+            const nameEntry = "&entry.934654902=" + encodeURIComponent(recipe ? recipe.name : "不明なレシピ");
+            window.location.href = formBase + "?" + idEntry + nameEntry;
+        }
+    }
+}
+
+function showMeTheRecipe(recipe) {
+    // 既存のコンテンツを隠す
+    const mainElements = ['h1', '.search-box', '#recipeTable', '#materialButtons', '.sort-buttons', '#materialSection'];
+    mainElements.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = 'none';
+    });
+
+    let detailArea = document.getElementById('recipeDetailArea');
+    if (!detailArea) {
+        detailArea = document.createElement('div');
+        detailArea.id = 'recipeDetailArea';
+        document.body.appendChild(detailArea);
+    }
+    detailArea.style.display = 'block';
+
+    detailArea.innerHTML = `
+        <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">← 検索に戻る</button>
+            <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66; padding: 10px 20px; border:none; border-radius:4px; cursor: pointer; font-weight:bold;">編集する</button>
+            
+            <h1 style="text-align:left; margin-top:20px;">${recipe.name}</h1>
+            <img src="images/${recipe.id}.jpg" alt="${recipe.name}" onerror="this.src='images/NO_NAME.jpg'" style="max-width:300px; width:100%; height:auto; display:block; margin:20px auto; border-radius:8px;">
+
+            <table class="recipe-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr><th style="background:#f0f0f0; text-align:left; padding:10px; border-bottom:2px solid #5cb85c; font-size:1.2em;">材料</th></tr>
+                </thead>
+                <tbody>
+                    ${(recipe.materials || []).map(m => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${m}</td></tr>`).join('')}
+                </tbody>
+                <thead>
+                    <tr><th style="background:#f0f0f0; text-align:left; padding:10px; border-bottom:2px solid #5cb85c; border-top:30px solid transparent; font-size:1.2em;">作り方</th></tr>
+                </thead>
+                <tbody>
+                    ${(recipe.methods || []).map(step => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${step}</td></tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    window.scrollTo(0, 0);
+}
+
+function editThisRecipe(recipeId) {
+    const recipe = RECIPE_LIST.find(r => r.id === recipeId);
+    if (!recipe) return;
+
+    // 編集前に確認ダイアログを表示
+    const message = `「${recipe.name}」の内容を編集しますか？\n(Googleフォームへ移動します)`;
+    if (!window.confirm(message)) {
+        return; // キャンセルした場合は何もしない
+    }
+
+    const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
+    const query = new URLSearchParams();
+    
+    query.append("entry.834953376", recipe.id);
+    query.append("entry.934654902", recipe.name);
+    query.append("entry.1179458958", (recipe.materials || []).join("\n"));
+    query.append("entry.811488190", (recipe.methods || []).join("\n"));
+
+    window.location.href = `${formBase}?${query.toString()}`;
+}
+
+
+
+function showMeTheRecipe(recipe) {
+    // 既存のコンテンツ（検索窓、テーブル、そして材料ボタンすべて）を隠す
+    // ID指定(#)だけでなく、すべての materialButtons を対象にします
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    mainSelectors.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = 'none';
+    });
+
+    // IDが重複している「材料ボタン」をすべて非表示にする
+    document.querySelectorAll('#materialButtons').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    let detailArea = document.getElementById('recipeDetailArea');
+    if (!detailArea) {
+        detailArea = document.createElement('div');
+        detailArea.id = 'recipeDetailArea';
+        document.body.appendChild(detailArea);
+    }
+    detailArea.style.display = 'block';
+
+    // （以下、innerHTML の代入処理へ続く...）
+
+    // 修正ポイント：src属性をバッククォートで囲む
+    detailArea.innerHTML = `
+        <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px;">
+            <button onclick="location.reload()">← 検索に戻る</button>
+            <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66;">編集する</button>
+            
+            <h1>${recipe.name}</h1>
+            <img src="images/${recipe.id}.jpg" alt="${recipe.name}" onerror="this.src='images/NO_NAME.jpg'" style="max-width:300px; width:100%; display:block; margin:20px auto;">
+
+            <table class="recipe-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr><th style="background:#f0f0f0; padding:10px; border-bottom:2px solid #5cb85c;">材料</th></tr>
+                </thead>
+                <tbody>
+                    ${(recipe.materials || []).map(m => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${m}</td></tr>`).join('')}
+                </tbody>
+                <thead>
+                    <tr><th style="background:#f0f0f0; padding:10px; border-bottom:2px solid #5cb85c; border-top:30px solid transparent;">作り方</th></tr>
+                </thead>
+                <tbody>
+                    ${(recipe.methods || []).map(step => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${step}</td></tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    window.scrollTo(0, 0);
+}
+</script>
+
+
+
+
 	<script>
+
+	
 	  function checkImageAndSet(id, path) {
 		const img = new Image();
 		img.onload = function() {
@@ -37,14 +187,29 @@
 		img.src = path;
 	  }
 
-	  document.addEventListener('DOMContentLoaded', () => {
-		document.querySelectorAll('img[id^="img"]').forEach(img => {
-		  const id = img.id;
-		  const num = id.replace('img', '');
-		  const path = `images/${num}.jpg`;
-		  checkImageAndSet(id, path);
+		document.addEventListener('DOMContentLoaded', () => {
+		  if (typeof RECIPE_LIST !== 'undefined') {
+			// 1. まずデータからHTML（カード）を生成する
+			renderRecipes();           
+
+			// 2. カードができてから、ボタンの数字を計算したり検索を有効にする
+			generateMaterialButtons(); 
+			filterAndSortRecipes();    
+			
+			if (typeof updateButtons === 'function') {
+			  updateButtons();
+			}
+		  } else {
+			console.error("recipes_data.js が読み込めていません");
+		  }
 		});
-	  });
+			  
+	  
+	  
+	  
+	  
+	  
+	  
 	</script>
 
 
@@ -509,2305 +674,14 @@ button:hover {
       <th>一致度</th>
     </tr>
   </thead>
-  <tbody>
-	<tr data-id="001"><td>001</td>
-		<td class="recipe-name"><a href="output/recipe_001.html">生姜焼き
-</a>
-			<span class="hidden-reading">しょうがやき</span>
-		</td>
-		<td>
-		<span class="material">しょうゆ:おおさじ3</span>
-		<span class="material">酒:おおさじ2</span>
-		<span class="material">みりん:おおさじ1</span>
-		<span class="material">根ショウガ:おおさじ1</span>
-		<span class="material">豚肉</span>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img001" src="" alt="料理画像">
-<script>checkImageAndSet('img001', 'images/001.jpg');</script>
-		</td>
-		<td>★</td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="002"><td>002</td>
-		<td class="recipe-name"><a href="output/recipe_002.html">マーボー豆腐
-</a>
-			<span class="hidden-reading">まーぼーどうふ</span>
-		</td>
-		<td>
-		<span class="material">豆腐:2~3個？</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img002" src="" alt="料理画像">
-<script>checkImageAndSet('img002', 'images/002.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="003"><td>003</td>
-		<td class="recipe-name"><a href="output/recipe_003.html">ロールキャベツ
-</a>
-			<span class="hidden-reading">ろーるきゃべつ</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img003" src="" alt="料理画像">
-<script>checkImageAndSet('img003', 'images/003.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="004"><td>004</td>
-		<td class="recipe-name"><a href="output/recipe_004.html">カレー
-</a>
-			<span class="hidden-reading">かれー</span>
-		</td>
-		<td>
-		<span class="material">カレールゥ</span>
-		<span class="material">人参</span>
-		<span class="material">玉ねぎ</span>
-		<span class="material">じゃがいも</span>
-		<span class="material">豚肉</span>
-		<span class="material">水</span>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img004" src="" alt="料理画像">
-<script>checkImageAndSet('img004', 'images/004.jpg');</script>
-		</td>
-		<td>★</td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="005"><td>005</td>
-		<td class="recipe-name"><a href="output/recipe_005.html">焼きそば
-</a>
-			<span class="hidden-reading">やきそば</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img005" src="" alt="料理画像">
-<script>checkImageAndSet('img005', 'images/005.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="006"><td>006</td>
-		<td class="recipe-name"><a href="output/recipe_006.html">グラタン
-</a>
-			<span class="hidden-reading">ぐらたん</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img006" src="" alt="料理画像">
-<script>checkImageAndSet('img006', 'images/006.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="007"><td>007</td>
-		<td class="recipe-name"><a href="output/recipe_007.html">かぼちゃスープ
-</a>
-			<span class="hidden-reading">かぼちゃすーぷ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img007" src="" alt="料理画像">
-<script>checkImageAndSet('img007', 'images/007.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="008"><td>008</td>
-		<td class="recipe-name"><a href="output/recipe_008.html">回鍋肉（クックドゥー）
-</a>
-			<span class="hidden-reading">ほいこーろー</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img008" src="" alt="料理画像">
-<script>checkImageAndSet('img008', 'images/008.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="009"><td>009</td>
-		<td class="recipe-name"><a href="output/recipe_009.html">シチュー
-</a>
-			<span class="hidden-reading">しちゅー</span>
-		</td>
-		<td>
-		<span class="material">シチュールゥ</span>
-		<span class="material">人参</span>
-		<span class="material">玉ねぎ</span>
-		<span class="material">じゃがいも</span>
-		<span class="material">鶏肉</span>
-		<span class="material">水</span>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img009" src="" alt="料理画像">
-<script>checkImageAndSet('img009', 'images/009.jpg');</script>
-		</td>
-		<td>★</td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="010"><td>010</td>
-		<td class="recipe-name"><a href="output/recipe_010.html">野菜肉炒め
-</a>
-			<span class="hidden-reading">やさいにくいため</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img010" src="" alt="料理画像">
-<script>checkImageAndSet('img010', 'images/010.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
 
 
-	<tr data-id="011"><td>011</td>
-		<td class="recipe-name"><a href="output/recipe_011.html">肉じゃが
-</a>
-			<span class="hidden-reading">にくじゃが</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img011" src="" alt="料理画像">
-<script>checkImageAndSet('img011', 'images/011.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="012"><td>012</td>
-		<td class="recipe-name"><a href="output/recipe_012.html">つみれとキャベツのコンソメ煮
-</a>
-			<span class="hidden-reading">つみれときゃべつのこんそめに</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img012" src="" alt="料理画像">
-<script>checkImageAndSet('img012', 'images/012.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="013"><td>013</td>
-		<td class="recipe-name"><a href="output/recipe_013.html">特製からあげ
-</a>
-			<span class="hidden-reading">とくせいからあげ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img013" src="" alt="料理画像">
-<script>checkImageAndSet('img013', 'images/013.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="014"><td>014</td>
-		<td class="recipe-name"><a href="output/recipe_014.html">特製オムライス（トリ肉など具多め）
-</a>
-			<span class="hidden-reading">とくせいおむらいす</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img014" src="" alt="料理画像">
-<script>checkImageAndSet('img014', 'images/014.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="015"><td>015</td>
-		<td class="recipe-name"><a href="output/recipe_015.html">青椒肉絲（クックドゥー）
-</a>
-			<span class="hidden-reading">ちんじゃおろーすー</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img015" src="" alt="料理画像">
-<script>checkImageAndSet('img015', 'images/015.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="016"><td>016</td>
-		<td class="recipe-name"><a href="output/recipe_016.html">チャーハン
-</a>
-			<span class="hidden-reading">ちゃーはん</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img016" src="" alt="料理画像">
-<script>checkImageAndSet('img016', 'images/016.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="017"><td>017</td>
-		<td class="recipe-name"><a href="output/recipe_017.html">なっとうチャーハン
-</a>
-			<span class="hidden-reading">なっとうちゃーはん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img017" src="" alt="料理画像">
-<script>checkImageAndSet('img017', 'images/017.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="018"><td>018</td>
-		<td class="recipe-name"><a href="output/recipe_018.html">親子丼
-</a>
-			<span class="hidden-reading">おやこどん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img018" src="" alt="料理画像">
-<script>checkImageAndSet('img018', 'images/018.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="019"><td>019</td>
-		<td class="recipe-name"><a href="output/recipe_019.html">サラダ
-</a>
-			<span class="hidden-reading">さらだ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img019" src="" alt="料理画像">
-<script>checkImageAndSet('img019', 'images/019.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="020"><td>020</td>
-		<td class="recipe-name"><a href="output/recipe_020.html">みそ汁（なめこ＆とうふ）
-</a>
-			<span class="hidden-reading">みそしる（なめこととうふ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img020" src="" alt="料理画像">
-<script>checkImageAndSet('img020', 'images/020.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
+<tbody>
+	</tbody>
 
 
-	<tr data-id="021"><td>021</td>
-		<td class="recipe-name"><a href="output/recipe_021.html">みそ汁（大根＆とうふ）
-</a>
-			<span class="hidden-reading">みそしる（だいこんととうふ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img021" src="" alt="料理画像">
-<script>checkImageAndSet('img021', 'images/021.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="022"><td>022</td>
-		<td class="recipe-name"><a href="output/recipe_022.html">みそ汁（キャベツ、ニンジン）
-</a>
-			<span class="hidden-reading">みそしる（きゃべつ、にんじん）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img022" src="" alt="料理画像">
-<script>checkImageAndSet('img022', 'images/022.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="023"><td>023</td>
-		<td class="recipe-name"><a href="output/recipe_023.html">みそ汁（じゃがいも）
-</a>
-			<span class="hidden-reading">みそしる（じゃがいも）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img023" src="" alt="料理画像">
-<script>checkImageAndSet('img023', 'images/023.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="024"><td>024</td>
-		<td class="recipe-name"><a href="output/recipe_024.html">みそ汁（わかめ、とうふ）
-</a>
-			<span class="hidden-reading">みそしる（わかめ、とうふ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img024" src="" alt="料理画像">
-<script>checkImageAndSet('img024', 'images/024.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="025"><td>025</td>
-		<td class="recipe-name"><a href="output/recipe_025.html">みそ汁（玉ネギ、じゃがいも）
-</a>
-			<span class="hidden-reading">みそしる（玉ねぎ、じゃがいも）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img025" src="" alt="料理画像">
-<script>checkImageAndSet('img025', 'images/025.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="026"><td>026</td>
-		<td class="recipe-name"><a href="output/recipe_026.html">みそ汁（小松菜、大根、豆？）
-</a>
-			<span class="hidden-reading">みそしる（こまつな、だいこん、まめ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img026" src="" alt="料理画像">
-<script>checkImageAndSet('img026', 'images/026.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="027"><td>027</td>
-		<td class="recipe-name"><a href="output/recipe_027.html">みそ汁（たまご、大根、玉ネギ、ジャガイモ、油あげ）
-</a>
-			<span class="hidden-reading">みそしる（たまご、だいこん、玉ねぎ、じゃがいも、あぶらあげ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img027" src="" alt="料理画像">
-<script>checkImageAndSet('img027', 'images/027.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="028"><td>028</td>
-		<td class="recipe-name"><a href="output/recipe_028.html">ささみでチーズパン粉焼き（フライ）
-</a>
-			<span class="hidden-reading">ささみでちーずぱんこやき</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img028" src="" alt="料理画像">
-<script>checkImageAndSet('img028', 'images/028.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="029"><td>029</td>
-		<td class="recipe-name"><a href="output/recipe_029.html">八宝菜（ブタ肉）（クックドゥー）
-</a>
-			<span class="hidden-reading">はっぽうさい（ぶたにく）</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img029" src="" alt="料理画像">
-<script>checkImageAndSet('img029', 'images/029.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="030"><td>030</td>
-		<td class="recipe-name"><a href="output/recipe_030.html">塩だれ回鍋肉（サマーバージョン？？）丸美屋？？
-</a>
-			<span class="hidden-reading">しおだれほいこーろー</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img030" src="" alt="料理画像">
-<script>checkImageAndSet('img030', 'images/030.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
 
 
-	<tr data-id="031"><td>031</td>
-		<td class="recipe-name"><a href="output/recipe_031.html">ブタ肉だいこん（すきやき風味）（クックドゥー？）
-</a>
-			<span class="hidden-reading">ぶたにくだいこん（すきやきふうみ）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img031" src="" alt="料理画像">
-<script>checkImageAndSet('img031', 'images/031.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="032"><td>032</td>
-		<td class="recipe-name"><a href="output/recipe_032.html">白菜のクリーム煮
-</a>
-			<span class="hidden-reading">はくさいのくりーむに</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img032" src="" alt="料理画像">
-<script>checkImageAndSet('img032', 'images/032.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="033"><td>033</td>
-		<td class="recipe-name"><a href="output/recipe_033.html">冷しゃぶ
-</a>
-			<span class="hidden-reading">れいしゃぶ</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img033" src="" alt="料理画像">
-<script>checkImageAndSet('img033', 'images/033.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="034"><td>034</td>
-		<td class="recipe-name"><a href="output/recipe_034.html">かぼちゃコロッケ（手作り）
-</a>
-			<span class="hidden-reading">かぼちゃころっけ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img034" src="" alt="料理画像">
-<script>checkImageAndSet('img034', 'images/034.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="035"><td>035</td>
-		<td class="recipe-name"><a href="output/recipe_035.html">ハヤシライス
-</a>
-			<span class="hidden-reading">はやしらいす</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img035" src="" alt="料理画像">
-<script>checkImageAndSet('img035', 'images/035.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="036"><td>036</td>
-		<td class="recipe-name"><a href="output/recipe_036.html">なべ
-</a>
-			<span class="hidden-reading">なべ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img036" src="" alt="料理画像">
-<script>checkImageAndSet('img036', 'images/036.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="037"><td>037</td>
-		<td class="recipe-name"><a href="output/recipe_037.html">マーボーナス（クックドゥー）
-</a>
-			<span class="hidden-reading">まーぼーなす</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img037" src="" alt="料理画像">
-<script>checkImageAndSet('img037', 'images/037.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="038"><td>038</td>
-		<td class="recipe-name"><a href="output/recipe_038.html">とりにくガリバタチキン（クックドゥー）
-</a>
-			<span class="hidden-reading">とりにくがりばたちきん</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img038" src="" alt="料理画像">
-<script>checkImageAndSet('img038', 'images/038.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="039"><td>039</td>
-		<td class="recipe-name"><a href="output/recipe_039.html">海鮮あんかけ（クックドゥー）
-</a>
-			<span class="hidden-reading">かいせんあんかけ</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img039" src="" alt="料理画像">
-<script>checkImageAndSet('img039', 'images/039.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="040"><td>040</td>
-		<td class="recipe-name"><a href="output/recipe_040.html">うま塩海老＆いか、ブロッコリー、なす＆ぶた肉
-</a>
-			<span class="hidden-reading">うましおえびあんどいか、ぶろっこりー、なすあんどぶたにく</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img040" src="" alt="料理画像">
-<script>checkImageAndSet('img040', 'images/040.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-	<tr data-id="041"><td>041</td>
-		<td class="recipe-name"><a href="output/recipe_041.html">ブタ肉×白菜いため煮
-</a>
-			<span class="hidden-reading">ぶたにくはくさいいために</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img041" src="" alt="料理画像">
-<script>checkImageAndSet('img041', 'images/041.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="042"><td>042</td>
-		<td class="recipe-name"><a href="output/recipe_042.html">とんかつ（手作り）
-</a>
-			<span class="hidden-reading">とんかつ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img042" src="" alt="料理画像">
-<script>checkImageAndSet('img042', 'images/042.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="043"><td>043</td>
-		<td class="recipe-name"><a href="output/recipe_043.html">あつあげほろ煮
-</a>
-			<span class="hidden-reading">あつあげほろに</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img043" src="" alt="料理画像">
-<script>checkImageAndSet('img043', 'images/043.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="044"><td>044</td>
-		<td class="recipe-name"><a href="output/recipe_044.html">しゃけのムニエル
-</a>
-			<span class="hidden-reading">しゃけのむにえる</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img044" src="" alt="料理画像">
-<script>checkImageAndSet('img044', 'images/044.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="045"><td>045</td>
-		<td class="recipe-name"><a href="output/recipe_045.html">すぶた（クックドゥー）
-</a>
-			<span class="hidden-reading">すぶた</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img045" src="" alt="料理画像">
-<script>checkImageAndSet('img045', 'images/045.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="046"><td>046</td>
-		<td class="recipe-name"><a href="output/recipe_046.html">なすのあげびたし
-</a>
-			<span class="hidden-reading">なすのあげびたし</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img046" src="" alt="料理画像">
-<script>checkImageAndSet('img046', 'images/046.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="047"><td>047</td>
-		<td class="recipe-name"><a href="output/recipe_047.html">冷やし中華
-</a>
-			<span class="hidden-reading">ひやしちゅうか</span>
-		</td>
-		<td>
-		<span class="material">豚肉</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img047" src="" alt="料理画像">
-<script>checkImageAndSet('img047', 'images/047.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="048"><td>048</td>
-		<td class="recipe-name"><a href="output/recipe_048.html">ラーメン
-</a>
-			<span class="hidden-reading">らーめん</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img048" src="" alt="料理画像">
-<script>checkImageAndSet('img048', 'images/048.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="049"><td>049</td>
-		<td class="recipe-name"><a href="output/recipe_049.html">たまごとじうどん
-</a>
-			<span class="hidden-reading">たまごとじうどん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img049" src="" alt="料理画像">
-<script>checkImageAndSet('img049', 'images/049.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="050"><td>050</td>
-		<td class="recipe-name"><a href="output/recipe_050.html">たきこみごはん（くり、とりそぼろ、さつまいも など）
-</a>
-			<span class="hidden-reading">たきこみごはん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img050" src="" alt="料理画像">
-<script>checkImageAndSet('img050', 'images/050.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-	<tr data-id="051"><td>051</td>
-		<td class="recipe-name"><a href="output/recipe_051.html">レバニラ（卵）いため（しょうゆあじ）
-</a>
-			<span class="hidden-reading">ればにら（たまご）いため（しょうゆあじ）</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img051" src="" alt="料理画像">
-<script>checkImageAndSet('img051', 'images/051.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="052"><td>052</td>
-		<td class="recipe-name"><a href="output/recipe_052.html">ハンバーグ（手作り）
-</a>
-			<span class="hidden-reading">はんばーぐ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img052" src="" alt="料理画像">
-<script>checkImageAndSet('img052', 'images/052.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="053"><td>053</td>
-		<td class="recipe-name"><a href="output/recipe_053.html">焼肉（タレはエバラ甘口）
-</a>
-			<span class="hidden-reading">やきにく（たれはえばらあまくち）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img053" src="" alt="料理画像">
-<script>checkImageAndSet('img053', 'images/053.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="054"><td>054</td>
-		<td class="recipe-name"><a href="output/recipe_054.html">チキン南ばん
-</a>
-			<span class="hidden-reading">ちきんなんばん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img054" src="" alt="料理画像">
-<script>checkImageAndSet('img054', 'images/054.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="055"><td>055</td>
-		<td class="recipe-name"><a href="output/recipe_055.html">ぶたたまどん（他人どん）
-</a>
-			<span class="hidden-reading">ぶたたまどん（たにんどん）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img055" src="" alt="料理画像">
-<script>checkImageAndSet('img055', 'images/055.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="056"><td>056</td>
-		<td class="recipe-name"><a href="output/recipe_056.html">フライドチキン
-</a>
-			<span class="hidden-reading">ふらいどちきん</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img056" src="" alt="料理画像">
-<script>checkImageAndSet('img056', 'images/056.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="057"><td>057</td>
-		<td class="recipe-name"><a href="output/recipe_057.html">すきやき（牛肉、しらたき、しいたけ、焼きどうふ、人参、ねぎ）
-</a>
-			<span class="hidden-reading">すきやき</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img057" src="" alt="料理画像">
-<script>checkImageAndSet('img057', 'images/057.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="058"><td>058</td>
-		<td class="recipe-name"><a href="output/recipe_058.html">ぶり大根
-</a>
-			<span class="hidden-reading">ぶりだいこん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img058" src="" alt="料理画像">
-<script>checkImageAndSet('img058', 'images/058.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="059"><td>059</td>
-		<td class="recipe-name"><a href="output/recipe_059.html">天プラ（さつまいも、かぼちゃ、まいたけ、れんこん、緑のやさい、かきあげ）
-</a>
-			<span class="hidden-reading">てんぷら</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img059" src="" alt="料理画像">
-<script>checkImageAndSet('img059', 'images/059.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="060"><td>060</td>
-		<td class="recipe-name"><a href="output/recipe_060.html">パスタ（ペペロンチーノ、ナポリタン、カルボナーラ など）
-</a>
-			<span class="hidden-reading">ぱすた</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img060" src="" alt="料理画像">
-<script>checkImageAndSet('img060', 'images/060.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-	<tr data-id="061"><td>061</td>
-		<td class="recipe-name"><a href="output/recipe_061.html">マカロニグラタン
-</a>
-			<span class="hidden-reading">まかろにぐらたん</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img061" src="" alt="料理画像">
-<script>checkImageAndSet('img061', 'images/061.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="062"><td>062</td>
-		<td class="recipe-name"><a href="output/recipe_062.html">タラのにつけ
-</a>
-			<span class="hidden-reading">たらのにつけ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img062" src="" alt="料理画像">
-<script>checkImageAndSet('img062', 'images/062.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="063"><td>063</td>
-		<td class="recipe-name"><a href="output/recipe_063.html">おぞうに
-</a>
-			<span class="hidden-reading">おぞうに</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img063" src="" alt="料理画像">
-<script>checkImageAndSet('img063', 'images/063.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="064"><td>064</td>
-		<td class="recipe-name"><a href="output/recipe_064.html">魚（ほっけ、カレイ、さば（みそ煮orそのまま）、しゃけ（焼くorホイルむし（やさいのせ））、タラ、サンマ など）
-</a>
-			<span class="hidden-reading">さかな（ほっけ、かれい、さば、しゃけ、たら、さんま）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img064" src="" alt="料理画像">
-<script>checkImageAndSet('img064', 'images/064.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="065"><td>065</td>
-		<td class="recipe-name"><a href="output/recipe_065.html">とんどん（ぶた肉の）
-</a>
-			<span class="hidden-reading">とんどん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img065" src="" alt="料理画像">
-<script>checkImageAndSet('img065', 'images/065.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="066"><td>066</td>
-		<td class="recipe-name"><a href="output/recipe_066.html">がんも焼（チーズのり）
-</a>
-			<span class="hidden-reading">がんもやき（ちーずのり）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img066" src="" alt="料理画像">
-<script>checkImageAndSet('img066', 'images/066.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="067"><td>067</td>
-		<td class="recipe-name"><a href="output/recipe_067.html">ちくわチーズのり焼き
-</a>
-			<span class="hidden-reading">ちくわちーずのりやき</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img067" src="" alt="料理画像">
-<script>checkImageAndSet('img067', 'images/067.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="068"><td>068</td>
-		<td class="recipe-name"><a href="output/recipe_068.html">とりむね肉（てりやき＋目玉やき）
-</a>
-			<span class="hidden-reading">とりむねにく（てりやき＋めだまやき）</span>
-		</td>
-		<td>
-		<span class="material">ID 110と同じ？</span>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img068" src="" alt="料理画像">
-<script>checkImageAndSet('img068', 'images/068.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="069"><td>069</td>
-		<td class="recipe-name"><a href="output/recipe_069.html">タラのにつけ（重複）
-</a>
-			<span class="hidden-reading">たらのにつけ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img069" src="" alt="料理画像">
-<script>checkImageAndSet('img069', 'images/069.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="070"><td>070</td>
-		<td class="recipe-name"><a href="output/recipe_070.html">おぞうに（重複）
-</a>
-			<span class="hidden-reading">おぞうに</span>
-		</td>
-		<td>
-		</td>
-		<td>和食,汁物</td>
-		<td>
-			<img id="img070" src="" alt="料理画像">
-<script>checkImageAndSet('img070', 'images/070.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-	<tr data-id="071"><td>071</td>
-		<td class="recipe-name"><a href="output/recipe_071.html">大根とあつあげブロッコリーのにもの
-</a>
-			<span class="hidden-reading">だいこんとあつあげぶろっこりーのにもの</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img071" src="" alt="料理画像">
-<script>checkImageAndSet('img071', 'images/071.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="072"><td>072</td>
-		<td class="recipe-name"><a href="output/recipe_072.html">ぬかじき煮つけ（エリンギ、エノキ）
-</a>
-			<span class="hidden-reading">ぬかじきにつけ（えりんぎ、えのき）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img072" src="" alt="料理画像">
-<script>checkImageAndSet('img072', 'images/072.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="073"><td>073</td>
-		<td class="recipe-name"><a href="output/recipe_073.html">カレイの煮つけ
-</a>
-			<span class="hidden-reading">かれいのにつけ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img073" src="" alt="料理画像">
-<script>checkImageAndSet('img073', 'images/073.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="074"><td>074</td>
-		<td class="recipe-name"><a href="output/recipe_074.html">厚揚げ大根いんげんにもの
-</a>
-			<span class="hidden-reading">あつあげだいこんいんげんにもの</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img074" src="" alt="料理画像">
-<script>checkImageAndSet('img074', 'images/074.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="075"><td>075</td>
-		<td class="recipe-name"><a href="output/recipe_075.html">玉子玉ねぎやき
-</a>
-			<span class="hidden-reading">たまご玉ねぎやき</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img075" src="" alt="料理画像">
-<script>checkImageAndSet('img075', 'images/075.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="076"><td>076</td>
-		<td class="recipe-name"><a href="output/recipe_076.html">ぎょうざのかわつつみ（もち、スライスチーズ、のり）
-</a>
-			<span class="hidden-reading">ぎょうざのかわつつみ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img076" src="" alt="料理画像">
-<script>checkImageAndSet('img076', 'images/076.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="077"><td>077</td>
-		<td class="recipe-name"><a href="output/recipe_077.html">はるまき（手作り）
-</a>
-			<span class="hidden-reading">はるまき</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img077" src="" alt="料理画像">
-<script>checkImageAndSet('img077', 'images/077.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="078"><td>078</td>
-		<td class="recipe-name"><a href="output/recipe_078.html">いもっち（じゃがいも、牛乳、チーズ、しょうゆ、さとう、みりん、かたくりこ）
-</a>
-			<span class="hidden-reading">いもっち</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img078" src="" alt="料理画像">
-<script>checkImageAndSet('img078', 'images/078.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="079"><td>079</td>
-		<td class="recipe-name"><a href="output/recipe_079.html">こうやどうふ
-</a>
-			<span class="hidden-reading">こうやどうふ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img079" src="" alt="料理画像">
-<script>checkImageAndSet('img079', 'images/079.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="080"><td>080</td>
-		<td class="recipe-name"><a href="output/recipe_080.html">コンソメスープ（ささみ、キャベツ、ニンジン、さつまいも、玉ねぎ）
-</a>
-			<span class="hidden-reading">こんそめすーぷ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img080" src="" alt="料理画像">
-<script>checkImageAndSet('img080', 'images/080.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-	<tr data-id="081"><td>081</td>
-		<td class="recipe-name"><a href="output/recipe_081.html">ハッシュポテト（じゃがいも、ハム、チーズ、かたくりこ）
-</a>
-			<span class="hidden-reading">はっしゅぽてと</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img081" src="" alt="料理画像">
-<script>checkImageAndSet('img081', 'images/081.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="082"><td>082</td>
-		<td class="recipe-name"><a href="output/recipe_082.html">油林ちー（長ネギ、胸肉大×２切）
-</a>
-			<span class="hidden-reading">ゆーりんちー</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img082" src="" alt="料理画像">
-<script>checkImageAndSet('img082', 'images/082.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="083"><td>083</td>
-		<td class="recipe-name"><a href="output/recipe_083.html">にこみハンバーグ
-</a>
-			<span class="hidden-reading">にこみはんばーぐ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img083" src="" alt="料理画像">
-<script>checkImageAndSet('img083', 'images/083.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="084"><td>084</td>
-		<td class="recipe-name"><a href="output/recipe_084.html">てりやき（鶏むね肉）
-</a>
-			<span class="hidden-reading">てりやき（とりむねにく）</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img084" src="" alt="料理画像">
-<script>checkImageAndSet('img084', 'images/084.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="085"><td>085</td>
-		<td class="recipe-name"><a href="output/recipe_085.html">はる人参と牛肉のピラフ（玉ねぎ、にんじん、ミックスベジタブル、バター、牛肉、クミン、塩コショウ、ブイヨン）
-</a>
-			<span class="hidden-reading">はるにんじんとぎゅうにくのぴらふ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img085" src="" alt="料理画像">
-<script>checkImageAndSet('img085', 'images/085.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="086"><td>086</td>
-		<td class="recipe-name"><a href="output/recipe_086.html">和風パスタ（ベーコン、しょうゆ、ホウレンソウ）
-</a>
-			<span class="hidden-reading">わふうぱすた</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img086" src="" alt="料理画像">
-<script>checkImageAndSet('img086', 'images/086.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="087"><td>087</td>
-		<td class="recipe-name"><a href="output/recipe_087.html">３色ドン（とりそぼろ、卵、えだまめ）
-</a>
-			<span class="hidden-reading">さんしょくどん</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img087" src="" alt="料理画像">
-<script>checkImageAndSet('img087', 'images/087.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="088"><td>088</td>
-		<td class="recipe-name"><a href="output/recipe_088.html">ピーマンチーズ肉堤生姜焼き味
-</a>
-			<span class="hidden-reading">ぴーまんちーずにくづつみしょうがやきあじ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img088" src="" alt="料理画像">
-<script>checkImageAndSet('img088', 'images/088.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="089"><td>089</td>
-		<td class="recipe-name"><a href="output/recipe_089.html">チキテキ（鶏もも肉二枚切る → 粉かけて焼く → たれかける）
-</a>
-			<span class="hidden-reading">ちきてき</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img089" src="" alt="料理画像">
-<script>checkImageAndSet('img089', 'images/089.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="090"><td>090</td>
-		<td class="recipe-name"><a href="output/recipe_090.html">ポトフ（具材大き目 ウインナー、ジャガイモ、ニンジン、玉ねぎ）
-</a>
-			<span class="hidden-reading">ぽとふ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img090" src="" alt="料理画像">
-<script>checkImageAndSet('img090', 'images/090.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	 
-	 
-	 <tr data-id="091"><td>091</td>
-		<td class="recipe-name"><a href="output/recipe_091.html">給食味のミネストローネ（トマト缶（カゴメ）、大豆（水煮））
-</a>
-			<span class="hidden-reading">きゅうしょくあじのみねすとろーね</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食,汁物</td>
-		<td>
-			<img id="img091" src="" alt="料理画像">
-<script>checkImageAndSet('img091', 'images/091.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="092"><td>092</td>
-		<td class="recipe-name"><a href="output/recipe_092.html">しゅうまい（玉ねぎ、エノキ、ひき肉をシュウマイの皮で包む）
-</a>
-			<span class="hidden-reading">しゅうまい</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img092" src="" alt="料理画像">
-<script>checkImageAndSet('img092', 'images/092.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="093"><td>093</td>
-		<td class="recipe-name"><a href="output/recipe_093.html">おかかあえ
-</a>
-			<span class="hidden-reading">おかかあえ</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img093" src="" alt="料理画像">
-<script>checkImageAndSet('img093', 'images/093.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="094"><td>094</td>
-		<td class="recipe-name"><a href="output/recipe_094.html">春雨のサラダ
-</a>
-			<span class="hidden-reading">はるさめのさらだ</span>
-		</td>
-		<td>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img094" src="" alt="料理画像">
-<script>checkImageAndSet('img094', 'images/094.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="095"><td>095</td>
-		<td class="recipe-name"><a href="output/recipe_095.html">スパゲティサラダ
-</a>
-			<span class="hidden-reading">すぱげてぃさらだ</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img095" src="" alt="料理画像">
-<script>checkImageAndSet('img095', 'images/095.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-	<tr data-id="096"><td>096</td>
-		<td class="recipe-name"><a href="output/recipe_096.html">レタスとツナときゅうりの何か（）
-</a>
-			<span class="hidden-reading">れたすとつなときゅうりのなにか</span>
-		</td>
-		<td>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img096" src="" alt="料理画像">
-<script>checkImageAndSet('img096', 'images/096.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-
-
-
-
-	<tr data-id="097"><td>097</td>
-		<td class="recipe-name"><a href="output/recipe_097.html">シュウマイ
-</a>
-			<span class="hidden-reading">しゅうまい</span>
-		</td>
-		<td>
-		<span class="material">玉ねぎ:中1個(200g)</span>
-		<span class="material">片栗粉:おおさじ3</span>
-		<span class="material">しょうゆ:おおさじ1</span>
-		<span class="material">オイスターソース:おおさじ1</span>
-		<span class="material">砂糖:おおさじ2</span>
-		<span class="material">ガラスープの素:こさじ1</span>
-		<span class="material">しょうがチューブ:2~3cm</span>
-		<span class="material">シュウマイの皮:30枚</span>
-		<span class="material">キャベツ:1/4個</span>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img097" src="" alt="料理画像">
-<script>checkImageAndSet('img097', 'images/097.jpg');</script>
-		</td>
-		<td>★</td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-
-
-
-
-
-
-
-	<tr data-id="999"><td>999</td>
-		<td class="recipe-name"><a href="output/recipe_999.html">しょっぱい卵焼き
-</a>
-			<span class="hidden-reading">しょっぱいたまごやき</span>
-		</td>
-		<td>
-		</td>
-		<td>和食</td>
-		<td>
-			<img id="img999" src="" alt="料理画像">
-<script>checkImageAndSet('img999', 'images/999.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-
-
-    <!-- さらにレシピを追加可能 これ以降のテーブルは add_recipe_app.pyで自動生成 -->
-  
-
-
-
-
-    <tr data-id="098"><td>098</td>
-		<td class="recipe-name"><a href="output/recipe_098.html">給食の春雨サラダ
-</a>
-			<span class="hidden-reading">きゅうしょくのはるさめさらだ</span>
-		</td>
-		<td>
-		<span class="material">春雨（乾燥）:50g</span>
-		<span class="material">ハム:4~5枚</span>
-		<span class="material">きゅうり:1/2本</span>
-		<span class="material">人参:1/3本</span>
-		<span class="material">しょうゆ:おおさじ1</span>
-		<span class="material">砂糖:おおさじ1</span>
-		<span class="material">酢:おおさじ1</span>
-		<span class="material">ごま油:適量</span>
-		<span class="material">水:150ml</span>
-		<span class="material">いりごま:適量</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img098" src="" alt="料理画像">
-<script>checkImageAndSet('img098', 'images/098.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="099"><td>099</td>
-		<td class="recipe-name"><a href="output/recipe_099.html">スパゲッティサラダ
-</a>
-			<span class="hidden-reading">すぱげってぃさらだ</span>
-		</td>
-		<td>
-		<span class="material">スパゲッティ:70g</span>
-		<span class="material">きゅうり:1本</span>
-		<span class="material">ハム:4枚</span>
-		<span class="material">コーン:おおさじ2</span>
-		<span class="material">油（米油）:こさじ:1</span>
-		<span class="material">マヨネーズ:おおさじ3</span>
-		<span class="material">プレーンヨーグルト:おおさじ2</span>
-		<span class="material">酢:こさじ1</span>
-		<span class="material">牛乳:おおさじ1</span>
-		<span class="material">砂糖:こさじ1</span>
-		<span class="material">コンソメ:ひとつまみ</span>
-		<span class="material">塩こしょう:少々</span>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img099" src="" alt="料理画像">
-<script>checkImageAndSet('img099', 'images/099.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-    <tr data-id="100"><td>100</td>
-		<td class="recipe-name"><a href="output/recipe_100.html">肉じゃが
-</a>
-			<span class="hidden-reading">にくじゃが</span>
-		</td>
-		<td>
-		<span class="material">牛肉・豚肉の細切れなど:400g</span>
-		<span class="material">じゃがいも:6個</span>
-		<span class="material">人参:1本</span>
-		<span class="material">玉ねぎ:1個</span>
-		<span class="material">白滝:1袋</span>
-		<span class="material">水:400cc</span>
-		<span class="material">しょうゆ:おおさじ4</span>
-		<span class="material">砂糖:おおさじ4</span>
-		<span class="material">みりん:おおさじ4</span>
-		<span class="material">ほんだし:おおさじ1</span>
-		</td>
-		<td>和風</td>
-		<td>
-			<img id="img100" src="" alt="料理画像">
-<script>checkImageAndSet('img100', 'images/100.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="101"><td>101</td>
-		<td class="recipe-name"><a href="output/recipe_101.html">バナナ蒸しパン
-</a>
-			<span class="hidden-reading">ばななむしぱん</span>
-		</td>
-		<td>
-		<span class="material">米粉:60g</span>
-		<span class="material">卵:1個</span>
-		<span class="material">無調整豆乳（牛乳）:60g</span>
-		<span class="material">はちみつ（メープルシロップ）:10g</span>
-		<span class="material">油（米油）:5g</span>
-		<span class="material">ベーキングパウダー:4g</span>
-		<span class="material">バナナ:1本</span>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img101" src="" alt="料理画像">
-<script>checkImageAndSet('img101', 'images/101.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="102"><td>102</td>
-		<td class="recipe-name"><a href="output/recipe_102.html">コールスロー
-</a>
-			<span class="hidden-reading">こーるすろー</span>
-		</td>
-		<td>
-		<span class="material">キャベツ:400g</span>
-		<span class="material">コーン:50g</span>
-		<span class="material">カニカマ:6本</span>
-		<span class="material">塩:適量</span>
-		<span class="material">A ヨーグルト:60g</span>
-		<span class="material">A マヨネーズ:おおさじ3</span>
-		<span class="material">A オリーブオイル:おおさじ1</span>
-		<span class="material">A 粒マスタード:こさじ2</span>
-		<span class="material">A はちみつ:こさじ1</span>
-		<span class="material">A レモン汁 or 酢:こさじ1</span>
-		<span class="material">A 塩:ひとつまみ</span>
-		</td>
-		<td>洋食</td>
-		<td>
-			<img id="img102" src="" alt="料理画像">
-<script>checkImageAndSet('img102', 'images/102.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="103"><td>103</td>
-		<td class="recipe-name"><a href="output/recipe_103.html">豚バラにらもやし炒め
-</a>
-			<span class="hidden-reading">ぶたばらにらもやしいため</span>
-		</td>
-		<td>
-		<span class="material">豚バラ:120g</span>
-		<span class="material">ニラ:1/2束</span>
-		<span class="material">もやし:1袋</span>
-		<span class="material">すりおろしショウガ:一片</span>
-		<span class="material">塩こしょう:少々</span>
-		<span class="material">A オイスターソース:おおさじ1</span>
-		<span class="material">A 酒:おおさじ1</span>
-		<span class="material">A しょうゆ:おおさじ1</span>
-		<span class="material">A 鶏ガラスープの素:こさじ1</span>
-		<span class="material">A ごま油:こさじ1/2</span>
-		<span class="material">A ラー油:お好み</span>
-		<span class="material">水溶き片栗粉:適量</span>
-		</td>
-		<td>和風</td>
-		<td>
-			<img id="img103" src="" alt="料理画像">
-<script>checkImageAndSet('img103', 'images/103.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-		
-	<tr data-id="104"><td>104</td>
-		<td class="recipe-name"><a href="output/recipe_104.html">ピーマンの肉詰め
-</a>
-			<span class="hidden-reading">ぴーまんのにくづめ</span>
-		</td>
-		<td>
-		<span class="material">ピーマン:6個</span>
-		<span class="material">合いびき肉:300g</span>
-		<span class="material">玉ねぎ:1/2個</span>
-		<span class="material">● パン粉:1/2カップ</span>
-		<span class="material">● 牛乳:大さじ2</span>
-		<span class="material">● 卵:1/2個</span>
-		<span class="material">小麦粉:大さじ1</span>
-		<span class="material">塩・胡椒:少々</span>
-		<span class="material">★ オイスターソース:大さじ2</span>
-		<span class="material">★ みりん:大さじ1</span>
-		<span class="material">★ 酒:大さじ1</span>
-		<span class="material">★ 水:100cc</span>
-		</td>
-		<td>和風</td>
-		<td>
-			<img id="img104" src="" alt="料理画像">
-<script>checkImageAndSet('img104', 'images/104.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-	
-	<tr data-id="105"><td>105</td>
-		<td class="recipe-name"><a href="output/recipe_105.html">春巻き
-</a>
-			<span class="hidden-reading">はるまき</span>
-		</td>
-		<td>
-		<span class="material">春巻きの皮:10枚</span>
-		<span class="material">豚ひき肉:150g</span>
-		<span class="material">春雨:40g</span>
-		<span class="material">人参:1/2本</span>
-		<span class="material">たけのこ（水煮）:80g</span>
-		<span class="material">干ししいたけ:2〜3個</span>
-		<span class="material">にら:1/3束</span>
-		<span class="material">しょうが:少々</span>
-		<span class="material">● 砂糖:大さじ1</span>
-		<span class="material">● 醤油:大さじ1</span>
-		<span class="material">● 紹興酒（または酒）:大さじ1</span>
-		<span class="material">● みりん:大さじ1</span>
-		<span class="material">● ごま油:大さじ1</span>
-		<span class="material">● オイスターソース:小さじ1</span>
-		<span class="material">● 鶏がらスープの素:小さじ1</span>
-		<span class="material">● しいたけの戻し汁または水:40cc</span>
-		<span class="material">● 水溶き小麦粉:適量</span>
-		<span class="material">揚げ油:適量</span>
-		</td>
-		<td>中華</td>
-		<td>
-			<img id="img105" src="" alt="料理画像">
-<script>checkImageAndSet('img105', 'images/105.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-	
-	<tr data-id="106"><td>106</td>
-		<td class="recipe-name"><a href="output/recipe_106.html">ほうれん草とベーコンとしめじの醤油パスタ
-</a>
-			<span class="hidden-reading">ほうれんそうとべーこんとしめじのしょうゆぱすた</span>
-		</td>
-		<td>
-		<span class="material">パスタ:200g</span>
-		<span class="material">水:適量</span>
-		<span class="material">塩:小さじ1</span>
-		<span class="material">ほうれん草:2株</span>
-		<span class="material">ハーフベーコン:40g</span>
-		<span class="material">しめじ:1袋</span>
-		<span class="material">醤油:大さじ1</span>
-		<span class="material">めんつゆ（2倍濃縮）:大さじ1/2</span>
-		<span class="material">塩胡椒:少々</span>
-		<span class="material">ごま油:適量</span>
-		</td>
-		<td>和風</td>
-		<td>
-			<img id="img106" src="" alt="料理画像">
-<script>checkImageAndSet('img106', 'images/106.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-    <tr data-id="107"><td>107</td>
-		<td class="recipe-name"><a href="output/recipe_107.html">かぼちゃ煮
-</a>
-			<span class="hidden-reading">かぼちゃに</span>
-		</td>
-		<td>
-		<span class="material">かぼちゃ:大なら1/4個</span>
-		<span class="material">水:200cc</span>
-		<span class="material">醤油:大さじ2</span>
-		<span class="material">酒:大さじ2</span>
-		<span class="material">みりん:大さじ2</span>
-		</td>
-		<td>和風</td>
-		<td>
-			<img id="img107" src="" alt="料理画像">
-<script>checkImageAndSet('img107', 'images/107.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-		
-		
-
-    <tr data-id="108"><td>108</td>
-		<td class="recipe-name"><a href="output/recipe_108.html">【簡単】定食屋さん風の野菜炒め♪
-</a>
-			<span class="hidden-reading">【かんたん】ていしょくやさんふうのやさいいため♪</span>
-		</td>
-		<td>
-		<span class="material">・キャベツ:大玉換算で1/4</span>
-		<span class="material">・人参:半分</span>
-		<span class="material">・玉ねぎ:半玉</span>
-		<span class="material">・もやし:一袋</span>
-		<span class="material">・豚バラor豚コマ(冷凍可):150〜お肉好きは200g程度</span>
-		<span class="material">・☆ 塩胡椒:2振り程度</span>
-		<span class="material">・☆ 鶏ガラスープの素(粉末):小さじ2</span>
-		<span class="material">・☆ 醤油:小さじ1</span>
-		<span class="material">・☆ ソース(オイスターソースが一番良いけどなんでもOK):大さじ1</span>
-		<span class="material">・☆ 小麦粉:小さじ2〜3</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img108" src="" alt="料理画像">
-<script>checkImageAndSet('img108', 'images/108.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-
-    <tr data-id="109"><td>109</td>
-		<td class="recipe-name"><a href="output/recipe_109.html">簡単＊トロトロじゃがいもコロッケ
-</a>
-			<span class="hidden-reading">かんたん＊とろとろじゃがいもころっけ</span>
-		</td>
-		<td>
-		<span class="material">・じゃがいも:4～5個</span>
-		<span class="material">・玉ねぎ:1/2個</span>
-		<span class="material">・ひき肉:120～150g</span>
-		<span class="material">・調味料:</span>
-		<span class="material">・● 砂糖:大3</span>
-		<span class="material">・● 醤油:大2</span>
-		<span class="material">・● 砂糖・醤油がない時は</span>
-		<span class="material">めんつゆ:大3</span>
-		<span class="material">・牛乳:大1</span>
-		<span class="material">・塩コショウ:適量</span>
-		<span class="material">・衣:</span>
-		<span class="material">・小麦粉:適量</span>
-		<span class="material">・卵:2個</span>
-		<span class="material">・パン粉:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img109" src="" alt="料理画像">
-<script>checkImageAndSet('img109', 'images/109.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="110"><td>110</td>
-		<td class="recipe-name"><a href="output/recipe_110.html">ウチの黄金比*鶏の照り焼き～お弁当にも…
-</a>
-			<span class="hidden-reading">うちのおうごんひ*にわとりのてりやき～おべんとうにも…</span>
-		</td>
-		<td>
-		<span class="material">・鶏モモ肉(胸肉</span>
-		<span class="material">手羽先etc.OK):1枚</span>
-		<span class="material">・醤油...A:25cc(大さじ1＋小さじ2)</span>
-		<span class="material">・みりん...A:25cc(大さじ1＋小さじ2)</span>
-		<span class="material">・砂糖...A:大さじ1～1.5(お好みで)</span>
-		<span class="material">・サラダ油(お好きなオイルでOK):適量</span>
-		<span class="material">・鶏モモ2～3枚の場合</span>
-		<span class="material">私は《材料A》は全て倍で作ります:</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img110" src="" alt="料理画像">
-<script>checkImageAndSet('img110', 'images/110.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="111"><td>111</td>
-		<td class="recipe-name"><a href="output/recipe_111.html">豚ひき肉と野菜のトマト煮込み
-</a>
-			<span class="hidden-reading">ぶたひきにくとやさいのとまとにこみ</span>
-		</td>
-		<td>
-		<span class="material">・豚ひき肉:200g</span>
-		<span class="material">・ベーコン:3枚くらい</span>
-		<span class="material">・人参:半分</span>
-		<span class="material">・玉ねぎ:大1玉</span>
-		<span class="material">・ジャガイモ:1個</span>
-		<span class="material">・大豆水煮:150g</span>
-		<span class="material">・● にんにくチューブ:1センチくらい</span>
-		<span class="material">・● カットトマト缶:1缶</span>
-		<span class="material">・● 水:100cc</span>
-		<span class="material">・● コンソメ:小さじ1</span>
-		<span class="material">・● ケチャップ:大さじ1</span>
-		<span class="material">・● 砂糖:小さじ1</span>
-		<span class="material">・● 塩コショウ:適量</span>
-		<span class="material">・● 炒め油:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img111" src="" alt="料理画像">
-<script>checkImageAndSet('img111', 'images/111.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="112"><td>112</td>
-		<td class="recipe-name"><a href="output/recipe_112.html">とろたま豚丼** (2人分)
-</a>
-			<span class="hidden-reading">とろたまぶたどん** (2にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・ごはん:どんぶり2杯(400g)</span>
-		<span class="material">・豚こま切れ肉:180g</span>
-		<span class="material">・溶き卵:2個分</span>
-		<span class="material">・片栗粉:大さじ1</span>
-		<span class="material">・サラダ油:大さじ1</span>
-		<span class="material">・細ねぎ(刻み):適量</span>
-		<span class="material">・☆調味料:</span>
-		<span class="material">・みりん:大さじ2</span>
-		<span class="material">・しょうゆ:大さじ1と1/2</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img112" src="" alt="料理画像">
-<script>checkImageAndSet('img112', 'images/112.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="113"><td>113</td>
-		<td class="recipe-name"><a href="output/recipe_113.html">もやしのすき焼き風
-</a>
-			<span class="hidden-reading">もやしのすきやきかぜ</span>
-		</td>
-		<td>
-		<span class="material">・もやし:2袋</span>
-		<span class="material">・豚肉(しゃぶしゃぶ用):200g</span>
-		<span class="material">・卵:4個</span>
-		<span class="material">・★割り下:</span>
-		<span class="material">・砂糖:大さじ2</span>
-		<span class="material">・酒:大さじ2</span>
-		<span class="material">・みりん:大さじ2</span>
-		<span class="material">・しょうゆ:大さじ4</span>
-		<span class="material">・ねぎ:好きなだけ</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img113" src="" alt="料理画像">
-<script>checkImageAndSet('img113', 'images/113.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="114"><td>114</td>
-		<td class="recipe-name"><a href="output/recipe_114.html">謎パン (1人分)
-</a>
-			<span class="hidden-reading">なぞぱん (1にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・食パン:1枚</span>
-		<span class="material">・ピザチーズ:ひとつかみ</span>
-		<span class="material">・卵:1個</span>
-		<span class="material">・マヨネーズ</span>
-		<span class="material">ケチャップ:各適量</span>
-		<span class="material">・ハム:1枚</span>
-		<span class="material">・バター:少々</span>
-		<span class="material">・レタス</span>
-		<span class="material">トマト:</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img114" src="" alt="料理画像">
-<script>checkImageAndSet('img114', 'images/114.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="115"><td>115</td>
-		<td class="recipe-name"><a href="output/recipe_115.html">豚肉とナスの香ばし塩炒め (2人分)
-</a>
-			<span class="hidden-reading">ぶたにくとなすのかおりばししおいため (2にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・豚こま・モモ切落し**:180g</span>
-		<span class="material">・なす:2本</span>
-		<span class="material">・長ねぎ:6本</span>
-		<span class="material">・しょうが:1/2片</span>
-		<span class="material">・酒:大さじ1</span>
-		<span class="material">・鶏ガラスープの素:小さじ1</span>
-		<span class="material">・塩:適量</span>
-		<span class="material">・こしょう:適量</span>
-		<span class="material">・小麦粉:適量</span>
-		<span class="material">・ごま油:大さじ1</span>
-		<span class="material">・油:大さじ1</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img115" src="" alt="料理画像">
-<script>checkImageAndSet('img115', 'images/115.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="116"><td>116</td>
-		<td class="recipe-name"><a href="output/recipe_116.html">ニンジンのグラッセ (2人分)
-</a>
-			<span class="hidden-reading">にんじんのぐらっせ (2にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・にんじん:1本</span>
-		<span class="material">・イタリアンパセリ:(添え用) 適量</span>
-		<span class="material">・☆調味料:</span>
-		<span class="material">・有塩バター:12g</span>
-		<span class="material">・塩:少々</span>
-		<span class="material">・砂糖:大さじ1</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img116" src="" alt="料理画像">
-<script>checkImageAndSet('img116', 'images/116.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="117"><td>117</td>
-		<td class="recipe-name"><a href="output/recipe_117.html">サクサクジューシー！ 基本のアジフライ (2人分)
-</a>
-			<span class="hidden-reading">さくさくじゅーしー！ きほんのあじふらい (2にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・アジ(三枚おろし):2尾分</span>
-		<span class="material">・塩こしょう:適量</span>
-		<span class="material">・薄力粉:適量</span>
-		<span class="material">・溶き卵:1個分</span>
-		<span class="material">・パン粉:適量</span>
-		<span class="material">・サラダ油:適量</span>
-		<span class="material">・添え用:</span>
-		<span class="material">・キャベツ(千切り):適量</span>
-		<span class="material">・ミニトマト:適量</span>
-		<span class="material">・ウスターソース:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img117" src="" alt="料理画像">
-<script>checkImageAndSet('img117', 'images/117.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="118"><td>118</td>
-		<td class="recipe-name"><a href="output/recipe_118.html">キャベツと豚肉の とろふわ卵中華丼 (2人分)
-</a>
-			<span class="hidden-reading">きゃべつとぶたにくの とろふわたまごちゅうかどん (2にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・豚バラ肉:150g</span>
-		<span class="material">・キャベツ:1/5個</span>
-		<span class="material">・卵:2個</span>
-		<span class="material">・ごはん:2杯分</span>
-		<span class="material">・片栗粉:大さじ1と1/2</span>
-		<span class="material">・サラダ油:適量</span>
-		<span class="material">・A 水:200cc</span>
-		<span class="material">・A 顆粒鶏ガラ:小さじ2</span>
-		<span class="material">・A しょうゆ:大さじ1</span>
-		<span class="material">・A 砂糖:大さじ1/2</span>
-		<span class="material">・A にんにくチューブ:2cm</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img118" src="" alt="料理画像">
-<script>checkImageAndSet('img118', 'images/118.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="119"><td>119</td>
-		<td class="recipe-name"><a href="output/recipe_119.html">具だくさん！豚汁 (4人分)
-</a>
-			<span class="hidden-reading">ぐだくさん！とんじる (4にんぶん)</span>
-		</td>
-		<td>
-		<span class="material">・豚バラ薄切り肉:80g</span>
-		<span class="material">・じゃがいも・大:1個（200g）</span>
-		<span class="material">・大根:5cm（150g）</span>
-		<span class="material">・にんじん:1/2本（80g）</span>
-		<span class="material">・ごぼう:1/3本（60g）</span>
-		<span class="material">・糸こんにゃく:1/3袋（70g）</span>
-		<span class="material">・A .水:3カップ</span>
-		<span class="material">・A .「ほんだし」小さじ2/3:</span>
-		<span class="material">・みそ:大さじ2・1/2</span>
-		<span class="material">・「AJINOMOTO:サラダ油」大さじ1/2</span>
-		<span class="material">・小ねぎの小口切り・またはあさつきの小口切り:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img119" src="" alt="料理画像">
-<script>checkImageAndSet('img119', 'images/119.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="120"><td>120</td>
-		<td class="recipe-name"><a href="output/recipe_120.html">ほうれんそうと卵のスープ
-</a>
-			<span class="hidden-reading">ほうれんそうとたまごのすーぷ</span>
-		</td>
-		<td>
-		<span class="material">・ほうれんそう:1/2束（100g）</span>
-		<span class="material">・えのきたけ:1/2束（40g）</span>
-		<span class="material">・たまねぎ:1/4個（50g）</span>
-		<span class="material">・コーン缶:1/2缶（60g）</span>
-		<span class="material">・溶き卵:1個</span>
-		<span class="material">・水:500㎖</span>
-		<span class="material">・鶏がらスープの素:大さじ１弱</span>
-		<span class="material">・しょうゆ:小さじ1</span>
-		<span class="material">・☆ 片栗粉:小さじ１</span>
-		<span class="material">・☆ 水:小さじ１</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img120" src="" alt="料理画像">
-<script>checkImageAndSet('img120', 'images/120.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="121"><td>121</td>
-		<td class="recipe-name"><a href="output/recipe_121.html">【保育園給食】簡単☆おかか和え
-</a>
-			<span class="hidden-reading">【ほいくえんきゅうしょく】かんたん☆おかかあえ</span>
-		</td>
-		<td>
-		<span class="material">・ほうれん草:１５ｇ</span>
-		<span class="material">・にんじん:５ｇ</span>
-		<span class="material">・もやし:１５ｇ</span>
-		<span class="material">・白菜:２０ｇ</span>
-		<span class="material">・かつお節:0.5ｇ</span>
-		<span class="material">・しょうゆ:２ｍｌ</span>
-		<span class="material">・みりん:１ｍｌ</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img121" src="" alt="料理画像">
-<script>checkImageAndSet('img121', 'images/121.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="122"><td>122</td>
-		<td class="recipe-name"><a href="output/recipe_122.html">簡単♥️挽き肉入りのかぼちゃコロッケ
-</a>
-			<span class="hidden-reading">かんたん♥♥ひきにくいれりのかぼちゃころっけ</span>
-		</td>
-		<td>
-		<span class="material">・かぼちゃ:1/4個(皮</span>
-		<span class="material">種付きで450g)</span>
-		<span class="material">・玉ねぎ:1/4個</span>
-		<span class="material">・合い挽き肉:100g</span>
-		<span class="material">・◎ ケチャップ:大さじ1</span>
-		<span class="material">・◎ 醤油:小さじ2</span>
-		<span class="material">・◎ 砂糖:小さじ1</span>
-		<span class="material">・☆ 小麦粉:適量</span>
-		<span class="material">・☆ 溶き卵:1個分</span>
-		<span class="material">・☆ パン粉:適量</span>
-		<span class="material">・サラダ油:適量</span>
-		<span class="material">・付け合せ:</span>
-		<span class="material">・プチトマト</span>
-		<span class="material">ミニアスパラ:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img122" src="" alt="料理画像">
-<script>checkImageAndSet('img122', 'images/122.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="123"><td>123</td>
-		<td class="recipe-name"><a href="output/recipe_123.html">夏にスタミナ満点！！レバニラ炒め
-</a>
-			<span class="hidden-reading">なつにすたみなまんてん！！ればにらいため</span>
-		</td>
-		<td>
-		<span class="material">・レバー:200㌘</span>
-		<span class="material">・もやし:１袋</span>
-		<span class="material">・ニラ:１束</span>
-		<span class="material">・牛乳:１カップ</span>
-		<span class="material">・○酒:小さじ１</span>
-		<span class="material">・○醤油:小さじ１</span>
-		<span class="material">・○にんにく(すりおろし):小さじ１</span>
-		<span class="material">・○しょうが(すりおろし):小さじ１</span>
-		<span class="material">・● 鶏がらスープの素:小さじ１</span>
-		<span class="material">・● 醤油:大さじ２</span>
-		<span class="material">・● みりん:大さじ２</span>
-		<span class="material">・● オイスターソース:大さじ１</span>
-		<span class="material">・● 砂糖:大さじ１．５</span>
-		<span class="material">・片栗粉:大さじ２～</span>
-		<span class="material">・ごま油:適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img123" src="" alt="料理画像">
-<script>checkImageAndSet('img123', 'images/123.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-    <tr data-id="124"><td>124</td>
-		<td class="recipe-name"><a href="output/recipe_124.html">大根と厚揚げの煮物
-</a>
-			<span class="hidden-reading">だいこんとあつあげげのにもの</span>
-		</td>
-		<td>
-		<span class="material">・大根:１０センチくらい</span>
-		<span class="material">・厚揚げ:１枚</span>
-		<span class="material">・だし汁:２カップ</span>
-		<span class="material">・しょうゆ:大さじ１〜２</span>
-		<span class="material">・酒:大さじ１</span>
-		<span class="material">・みりん:大さじ１</span>
-		<span class="material">・砂糖:大さじ１</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img124" src="" alt="料理画像">
-<script>checkImageAndSet('img124', 'images/124.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-
-
-
-    <tr data-id="125"><td>125</td>
-		<td class="recipe-name"><a href="output/recipe_125.html">簡単！激ウマ！甘辛の豚バラ大根
-</a>
-			<span class="hidden-reading">かんたん！げきうま！かんしんのぶたばらだいこん</span>
-		</td>
-		<td>
-		<span class="material">・大根:1/3本</span>
-		<span class="material">・豚バラ肉:150g</span>
-		<span class="material">・ごま油(炒め用):大さじ1</span>
-		<span class="material">・● 醤油・みりん・砂糖:各大さじ2</span>
-		<span class="material">・● ほんだし(顆粒):小さじ1/2</span>
-		<span class="material">・● 水:200cc</span>
-		<span class="material">・万能ねぎ(小口切り):適量</span>
-		</td>
-		<td></td>
-		<td>
-			<img id="img125" src="" alt="料理画像">
-<script>checkImageAndSet('img125', 'images/125.jpg');</script>
-		</td>
-		<td></td>
-		<td class="match-rate"></td>
-	</tr>
-</tbody>
 </table>
 
 
@@ -2888,7 +762,9 @@ button:hover {
 
   function filterAndSortRecipes() {
     const keyword = document.getElementById('keyword').value.trim().toLowerCase();
-    const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
+		// 「document」ではなく「tbody」から探すように変更します
+	// 🟢 844行目あたりをこれに書き換え
+const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
     const filteredRows = [];
 
     rows.forEach(row => {
@@ -2969,8 +845,7 @@ button:hover {
     filterAndSortRecipes();
   }
 
-  generateMaterialButtons();
-  filterAndSortRecipes();
+
 
   const backToTopBtn = document.getElementById('backToTop');
   const scrollToBottomBtn = document.getElementById('scrollToBottom');
@@ -3032,59 +907,51 @@ button:hover {
   });
   
   
-  // テーブル内の行（tr）をクリックしたら、その中のリンク先へ飛ばす
-document.querySelector('#recipeTable tbody').addEventListener('click', (e) => {
-  const tr = e.target.closest('tr');
-  if (tr) {
-    const link = tr.querySelector('.recipe-name a');
-    if (link) link.click();
-  }
-});
 
 
 
+// 【修正版】あなたの処理をすべて維持したコード
+let updateButtonsOutside; 
 
-
-(() => {
-  document.addEventListener('DOMContentLoaded', () => {
+function initFixedMaterialButtons() {
     const containers = document.querySelectorAll('#materialButtons');
     const target = containers[1]; 
     if (!target) return;
 
     const materialList = ['豚肉', '鶏肉', 'ひき肉', '玉ねぎ', 'じゃがいも'];
-    const rows = document.querySelectorAll('#recipeTable tbody tr');
+    const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
 
-    // ★ボタンを更新する関数を独立させる
+    // 🟢 修正点：innerHTML = '' をやめ、お気に入りボタン以外の古い材料ボタンだけを消去する
+    const oldButtons = target.querySelectorAll('button:not(#favoriteFilterBtn)');
+    oldButtons.forEach(btn => btn.remove());
+
     const updateButtons = () => {
-      // 現在表示されている（hiddenじゃない）行だけを対象にする
       const visibleRows = Array.from(rows).filter(row => !row.classList.contains('hidden'));
-      // ただし、何も選ばれていない時は全行を対象にする（初期状態のため）
       const selectedButtons = target.querySelectorAll('button.selected');
       const scanRows = selectedButtons.length === 0 ? Array.from(rows) : visibleRows;
 
       target.querySelectorAll('button:not(#favoriteFilterBtn)').forEach(btn => {
         const m = btn.dataset.material;
-        // 現在の表示結果の中で、その材料が何件あるか数え直す
         const count = Array.from(scanRows).filter(row => row.cells[2].textContent.includes(m)).length;
         btn.textContent = `${m} (${count})`;
-        
-        // 0件になったボタンを半透明にするなどの演出も可能
         btn.style.opacity = (count === 0 && !btn.classList.contains('selected')) ? "0.5" : "1";
       });
     };
+    
+    updateButtonsOutside = updateButtons;
 
+    // 材料ボタンを追加（お気に入りボタンの後に並びます）
     materialList.forEach(name => {
       const btn = document.createElement('button');
       btn.dataset.material = name;
+      btn.textContent = name;
       target.appendChild(btn);
 
       btn.onclick = () => {
         btn.classList.toggle('selected');
-
-        const selectedMaterials = Array.from(target.querySelectorAll('button.selected'))
+        const selectedMaterials = Array.from(target.querySelectorAll('button.selected:not(#favoriteFilterBtn)'))
                                        .map(b => b.dataset.material);
 
-        // 絞り込み実行
         rows.forEach(row => {
           if (selectedMaterials.length === 0) {
             row.classList.remove('hidden');
@@ -3094,18 +961,60 @@ document.querySelector('#recipeTable tbody').addEventListener('click', (e) => {
             row.classList.toggle('hidden', !isMatch);
           }
         });
-
-        // ★絞り込みが終わった後に、数字を書き換える！
         updateButtons();
       };
     });
 
-    // 初期表示のカウント
     updateButtons();
+}
+
+// 1060行目付近
+function renderRecipes() {
+  const tbody = document.querySelector('#recipeTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = ""; 
+
+  RECIPE_LIST.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = r.id;
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td class="recipe-name">
+        <a href="javascript:void(0);" onclick="goToRecipeDetail('${r.id}')">${r.name}</a>
+        <span class="hidden-reading">${r.reading || ''}</span>
+      </td>
+      <td>${r.materials.map(m => `<span class="material">${m}</span>`).join('')}</td>
+      <td data-genre="${r.genre}">${r.genre}</td>
+      <td>
+        <img id="img${r.id}" src="images/${r.id}.jpg" alt="料理画像" onerror="this.src='images/NO_NAME.jpg'">
+      </td>
+      <td>${r.favorite || ''}</td>
+      <td class="match-rate"></td>
+    `;
+    
+    // 行全体をクリックした時も同じ関数を呼ぶ
+    tr.onclick = (e) => {
+      if (e.target.tagName !== 'A') {
+        goToRecipeDetail(r.id);
+      }
+    };
+    tbody.appendChild(tr);
   });
-})();
+}
+
+// データの描画と初期化の司令塔
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof RECIPE_LIST !== 'undefined') {
+    renderRecipes();            // ① まずカードを全部出す
+    generateMaterialButtons();  // ② 検索機能を準備
+    filterAndSortRecipes();     // ③ 絞り込みを準備
+    
+    // ④ 最後にあなたの「豚肉・鶏肉」ボタンを準備する
+    initFixedMaterialButtons(); 
+  } else {
+    console.error("recipes_data.js が読み込めていません");
+  }
+});
 </script>
-
-
 </body>
-
+</html>
