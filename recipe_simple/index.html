@@ -35,25 +35,21 @@
 <script src="recipes_data.js"></script>
 <script>
 
-
 function createNewRecipe() {
-    // 1. IDを数値化し、900以上の「テスト用外れ値」を除外して最大値を探す
-    const validIds = RECIPE_LIST
-        .map(r => parseInt(r.id))
-        .filter(id => id < 900); // 900番台は外れ値として無視する
-
+    // 900番台以外の最大IDを探して+1する
+    const validIds = RECIPE_LIST.map(r => parseInt(r.id)).filter(id => id < 900);
     const lastId = validIds.length > 0 ? Math.max(...validIds) : 0;
     const nextId = String(lastId + 1).padStart(3, '0');
+
+    if (!window.confirm(`新規レシピ（ID: ${nextId}）を作成しますか？`)) return;
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
     const query = new URLSearchParams();
     
+    // 新規作成時はIDだけを自動入力させる
     query.append("entry.834953376", nextId);
-    
-    const message = `新規レシピ（ID: ${nextId}）を作成しますか？\n（現在の最大値 ${lastId} 番に続く番号です）`;
-    if (window.confirm(message)) {
-        window.location.href = `${formBase}?${query.toString()}`;
-    }
+
+    window.location.href = `${formBase}?${query.toString()}`;
 }
 
 
@@ -81,14 +77,22 @@ function goToRecipeDetail(recipeId) {
     }
 }
 
+
+// --- レシピ詳細表示機能 ---
 function showMeTheRecipe(recipe) {
-    // 既存のコンテンツを隠す
-    const mainElements = ['h1', '.search-box', '#recipeTable', '#materialButtons', '.sort-buttons', '#materialSection'];
-    mainElements.forEach(selector => {
+    // 1. 既存のメインコンテンツをすべて非表示にする
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    mainSelectors.forEach(selector => {
         const el = document.querySelector(selector);
         if (el) el.style.display = 'none';
     });
 
+    // 2. 重複している材料ボタンコンテナをすべて非表示にする
+    document.querySelectorAll('#materialButtons').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // 3. 詳細表示エリアの準備
     let detailArea = document.getElementById('recipeDetailArea');
     if (!detailArea) {
         detailArea = document.createElement('div');
@@ -97,26 +101,34 @@ function showMeTheRecipe(recipe) {
     }
     detailArea.style.display = 'block';
 
+    // 4. 詳細画面の HTML 組み立て
     detailArea.innerHTML = `
-        <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">← 検索に戻る</button>
-            <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66; padding: 10px 20px; border:none; border-radius:4px; cursor: pointer; font-weight:bold;">編集する</button>
+        <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="margin-bottom: 20px; overflow: hidden;">
+                <button onclick="location.reload()" style="padding: 10px 15px; cursor: pointer;">← 検索に戻る</button>
+                <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">このレシピを編集する</button>
+            </div>
             
-            <h1 style="text-align:left; margin-top:20px;">${recipe.name}</h1>
-            <img src="images/${recipe.id}.jpg" alt="${recipe.name}" onerror="this.src='images/NO_NAME.jpg'" style="max-width:300px; width:100%; height:auto; display:block; margin:20px auto; border-radius:8px;">
+            <h1 style="border-bottom: 2px solid #5cb85c; padding-bottom: 10px;">${recipe.name}</h1>
+            <p style="color: #666; font-size: 0.9em;">ふりがな: ${recipe.reading || '未設定'}</p>
+            
+            <img src="images/${recipe.id}.jpg" alt="${recipe.name}" onerror="this.src='images/NO_NAME.jpg'" style="max-width:400px; width:100%; display:block; margin:20px auto; border-radius: 8px;">
 
-            <table class="recipe-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                 <thead>
-                    <tr><th style="background:#f0f0f0; text-align:left; padding:10px; border-bottom:2px solid #5cb85c; font-size:1.2em;">材料</th></tr>
+                    <tr><th style="background:#f9f9f9; padding:12px; border-bottom:2px solid #5cb85c; text-align: left;">材料</th></tr>
                 </thead>
                 <tbody>
-                    ${(recipe.materials || []).map(m => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${m}</td></tr>`).join('')}
+                    ${(recipe.materials || []).map(m => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">・${m}</td></tr>`).join('')}
                 </tbody>
+            </table>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 30px;">
                 <thead>
-                    <tr><th style="background:#f0f0f0; text-align:left; padding:10px; border-bottom:2px solid #5cb85c; border-top:30px solid transparent; font-size:1.2em;">作り方</th></tr>
+                    <tr><th style="background:#f9f9f9; padding:12px; border-bottom:2px solid #5cb85c; text-align: left;">作り方</th></tr>
                 </thead>
                 <tbody>
-                    ${(recipe.methods || []).map(step => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;">${step}</td></tr>`).join('')}
+                    ${(recipe.methods || []).map((step, index) => `<tr><td style="padding:12px; border-bottom:1px dotted #ccc;"><span style="font-weight:bold; color:#5cb85c; margin-right:8px;">${index + 1}.</span>${step}</td></tr>`).join('')}
                 </tbody>
             </table>
         </div>
@@ -124,23 +136,22 @@ function showMeTheRecipe(recipe) {
     window.scrollTo(0, 0);
 }
 
+// --- レシピ編集機能（Googleフォームへ） ---
 function editThisRecipe(recipeId) {
     const recipe = RECIPE_LIST.find(r => r.id === recipeId);
     if (!recipe) return;
 
-    // 編集前に確認ダイアログを表示
-    const message = `「${recipe.name}」の内容を編集しますか？\n(Googleフォームへ移動します)`;
-    if (!window.confirm(message)) {
-        return; // キャンセルした場合は何もしない
-    }
+    if (!window.confirm(`「${recipe.name}」を編集しますか？\n(Googleフォームへ移動します)`)) return;
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
     const query = new URLSearchParams();
     
-    query.append("entry.834953376", recipe.id);
-    query.append("entry.934654902", recipe.name);
-    query.append("entry.1179458958", (recipe.materials || []).join("\n"));
-    query.append("entry.811488190", (recipe.methods || []).join("\n"));
+    // Googleフォームの各項目IDにデータを紐付け
+    query.append("entry.834953376", recipe.id);           // ID
+    query.append("entry.934654902", recipe.name);         // レシピ名
+    query.append("entry.1286608741", recipe.reading || ""); // ふりがな
+    query.append("entry.1179458958", (recipe.materials || []).join("\n")); // 材料（改行区切り）
+    query.append("entry.811488190", (recipe.methods || []).join("\n"));    // 作り方（改行区切り）
 
     window.location.href = `${formBase}?${query.toString()}`;
 }
