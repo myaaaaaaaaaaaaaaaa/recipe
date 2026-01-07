@@ -77,20 +77,28 @@ function createNewRecipe() {
 
 function goToRecipeDetail(recipeId) {
     const recipe = RECIPE_LIST.find(r => r.id === recipeId);
-    // 材料と作り方が両方あるか判定
-    const hasContent = recipe && 
-                       recipe.materials && recipe.materials.length > 0 && 
-                       recipe.methods && recipe.methods.length > 0;
+    if (!recipe) return;
 
-    if (hasContent) {
+    // 判定基準を「材料または作り方が存在する」に変更
+    const hasSomeContent = (recipe.materials && recipe.materials.length > 0) || 
+                           (recipe.methods && recipe.methods.length > 0);
+
+    if (hasSomeContent) {
+        // 何かしらデータがあれば詳細画面へ（ここでふりがな等が表示されます）
         showMeTheRecipe(recipe); 
     } else {
-        const message = `「${recipe ? recipe.name : "このレシピ"}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
+        // 完全に空っぽの場合のみフォームへ
+        const message = `「${recipe.name}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
         if (window.confirm(message)) {
             const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-            const idEntry = "entry.834953376=" + recipeId;
-            const nameEntry = "&entry.934654902=" + encodeURIComponent(recipe ? recipe.name : "不明なレシピ");
-            window.location.href = formBase + "?" + idEntry + nameEntry;
+            
+            // フォームへ飛ばす際、既にある情報（ID, 名前, ふりがな）をパラメータに載せる
+            const params = new URLSearchParams();
+            params.append("entry.834953376", recipe.id);
+            params.append("entry.934654902", recipe.name);
+            params.append("entry.1286608741", recipe.reading || ""); // ふりがなを送る
+
+            window.location.href = `${formBase}?${params.toString()}`;
         }
     }
 }
@@ -1108,6 +1116,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
 
 
