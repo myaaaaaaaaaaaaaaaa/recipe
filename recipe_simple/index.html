@@ -7,6 +7,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+	
 
 	<link rel="icon" href="images/favicon.ico" type="image/x-icon">
 
@@ -28,10 +32,21 @@
 
 
 <script>
-  // 読み込むたびに「?v=タイムスタンプ」を付けてキャッシュを無効化する
-  const script = document.createElement('script');
-  script.src = 'recipes_data.js?v=' + new Date().getTime();
-  document.head.appendChild(script);
+  (function() {
+    const script = document.createElement('script');
+    // キャッシュ無効化のためのクエリパラメータ
+    script.src = 'recipes_data.js?v=' + new Date().getTime();
+    
+    // 重要：読み込みが完了してから初期化関数を呼ぶ
+    script.onload = function() {
+      console.log("データの読み込みが完了しました");
+      if (typeof init === 'function') {
+        init(); // 画面を描画するメインの関数をここで呼ぶ
+      }
+    };
+
+    document.head.appendChild(script);
+  })();
 </script>
 
 
@@ -1093,5 +1108,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
