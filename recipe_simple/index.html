@@ -136,24 +136,28 @@ function showMeTheRecipe(recipe) {
     window.scrollTo(0, 0);
 }
 
-// --- レシピ編集機能（Googleフォームへ） ---
 function editThisRecipe(recipeId) {
     const recipe = RECIPE_LIST.find(r => r.id === recipeId);
     if (!recipe) return;
 
-    if (!window.confirm(`「${recipe.name}」を編集しますか？\n(Googleフォームへ移動します)`)) return;
+    if (!window.confirm(`「${recipe.name}」を編集しますか？`)) return;
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-    const query = new URLSearchParams();
     
-    // Googleフォームの各項目IDにデータを紐付け
-    query.append("entry.834953376", recipe.id);           // ID
-    query.append("entry.934654902", recipe.name);         // レシピ名
-    query.append("entry.1286608741", recipe.reading || ""); // ふりがな
-    query.append("entry.1179458958", (recipe.materials || []).join("\n")); // 材料（改行区切り）
-    query.append("entry.811488190", (recipe.methods || []).join("\n"));    // 作り方（改行区切り）
+    // 安全にURLを組み立てるための処理
+    const params = {
+        "entry.834953376": recipe.id,
+        "entry.934654902": recipe.name,
+        "entry.1286608741": recipe.reading || "",
+        "entry.1179458958": (recipe.materials || []).join("\n"),
+        "entry.811488190": (recipe.methods || []).join("\n")
+    };
 
-    window.location.href = `${formBase}?${query.toString()}`;
+    const queryString = Object.keys(params)
+        .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+        .join('&');
+
+    window.location.href = `${formBase}?${queryString}`;
 }
 
 
@@ -180,7 +184,7 @@ function showMeTheRecipe(recipe) {
     }
     detailArea.style.display = 'block';
 
-    // （以下、innerHTML の代入処理へ続く...）
+
 
     // 修正ポイント：src属性をバッククォートで囲む
     detailArea.innerHTML = `
