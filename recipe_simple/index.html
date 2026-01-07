@@ -142,30 +142,40 @@ function editThisRecipe(recipeId) {
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
     
-    // 1. まずは「材料」と「作り方」も含めてURLを作ってみる
     const materials = (recipe.materials || []).join("\n");
     const methods = (recipe.methods || []).join("\n");
-    
+
+    // 1. 全データ（ID, 名前, ふりがな, 材料, 作り方）でURLを作成
     const params = new URLSearchParams();
-    params.append("entry.834953376", recipe.id);          // ID
-    params.append("entry.934654902", recipe.name);        // レシピ名
-    params.append("entry.1286608741", recipe.reading || ""); // ふりがな
+    params.append("entry.834953376", recipe.id);
+    params.append("entry.934654902", recipe.name);
+    params.append("entry.1286608741", recipe.reading || "");
     params.append("entry.1179458958", materials);
     params.append("entry.811488190", methods);
 
     let fullUrl = `${formBase}?${params.toString()}`;
 
-    // 2. もし2000文字を超えていたら、中身（材料・作り方）を削って再構成する
+    // 2. 2000文字を超えている場合、作り方だけを削って再試行（ID, 名前, ふりがな, 材料）
     if (fullUrl.length > 2000) {
-        alert("解説が長文のため、材料と作り方の自動入力はスキップします。\nID、名前、ふりがなは自動入力されますので、残りは元のページからコピーしてください。");
+        const midParams = new URLSearchParams();
+        midParams.append("entry.834953376", recipe.id);
+        midParams.append("entry.934654902", recipe.name);
+        midParams.append("entry.1286608741", recipe.reading || "");
+        midParams.append("entry.1179458958", materials);
         
-        const safeParams = new URLSearchParams();
-        safeParams.append("entry.834953376", recipe.id);
-        safeParams.append("entry.934654902", recipe.name);
-        safeParams.append("entry.1286608741", recipe.reading || "");
-        // 材料と作り方はあえて送らない（空にする）
-        
-        fullUrl = `${formBase}?${safeParams.toString()}`;
+        fullUrl = `${formBase}?${midParams.toString()}`;
+
+        // 3. 材料を入れてもまだ超える場合は、さらに材料も削る（ID, 名前, ふりがな のみ）
+        if (fullUrl.length > 2000) {
+            alert("材料・作り方が非常に長文のため、自動入力を制限しました。\nID・名前・ふりがなのみ入力された状態で別タブを開きます。");
+            const safeParams = new URLSearchParams();
+            safeParams.append("entry.834953376", recipe.id);
+            safeParams.append("entry.934654902", recipe.name);
+            safeParams.append("entry.1286608741", recipe.reading || "");
+            fullUrl = `${formBase}?${safeParams.toString()}`;
+        } else {
+            alert("作り方が長文のため、作り方の自動入力をスキップしました。\n材料までは自動入力されています。");
+        }
     } else {
         if (!window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) return;
     }
