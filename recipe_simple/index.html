@@ -148,7 +148,7 @@ function editThisRecipe(recipeId) {
     const materials = (recipe.materials || []).join("\n");
     const methods = (recipe.methods || []).join("\n");
 
-    // 1. 全データ（ID, 名前, ふりがな, 材料, 作り方）でURLを作成
+    // 1. 全データでURLを作成
     const params = new URLSearchParams();
     params.append("entry.834953376", recipe.id);
     params.append("entry.934654902", recipe.name);
@@ -158,8 +158,9 @@ function editThisRecipe(recipeId) {
 
     let fullUrl = `${formBase}?${params.toString()}`;
 
-    // 2. 2000文字を超えている場合、作り方だけを削って再試行（ID, 名前, ふりがな, 材料）
+    // 2. 判定と処理
     if (fullUrl.length > 2000) {
+        // 自動入力が制限される場合：alertを出して強制的に開く
         const midParams = new URLSearchParams();
         midParams.append("entry.834953376", recipe.id);
         midParams.append("entry.934654902", recipe.name);
@@ -168,7 +169,6 @@ function editThisRecipe(recipeId) {
         
         fullUrl = `${formBase}?${midParams.toString()}`;
 
-        // 3. 材料を入れてもまだ超える場合は、さらに材料も削る（ID, 名前, ふりがな のみ）
         if (fullUrl.length > 2000) {
             alert("材料・作り方が非常に長文のため、自動入力を制限しました。\nID・名前・ふりがなのみ入力された状態で別タブを開きます。");
             const safeParams = new URLSearchParams();
@@ -180,10 +180,13 @@ function editThisRecipe(recipeId) {
             alert("作り方が長文のため、作り方の自動入力をスキップしました。\n材料までは自動入力されています。");
         }
     } else {
-        if (!window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) return;
+        // 全項目自動入力できる場合：confirmでキャンセル可能にする
+        if (!window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) {
+            return; // キャンセル時は何もしない
+        }
     }
 
-    // 別タブで開く
+    // 最終的なURLを別タブで開く
     window.open(fullUrl, '_blank');
 }
 
@@ -1090,4 +1093,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
