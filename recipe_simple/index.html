@@ -24,7 +24,12 @@
 			</font>
 		</div>
 
-
+<script>
+  // 読み込むたびに「?v=タイムスタンプ」を付けてキャッシュを無効化する
+  const script = document.createElement('script');
+  script.src = 'recipes_data.js?v=' + new Date().getTime();
+  document.head.appendChild(script);
+</script>
 
 <script src="recipes_data.js"></script>
 <script>
@@ -1017,4 +1022,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
+
 </html>
