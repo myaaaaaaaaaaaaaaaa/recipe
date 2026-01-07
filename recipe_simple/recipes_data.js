@@ -1757,3 +1757,4 @@ const RECIPE_LIST = [
     "favorite": "",
     "methods": []
   },
+  ];
