@@ -2055,4 +2055,3 @@ const RECIPE_LIST = [
     ]
   }
 ];
-];
