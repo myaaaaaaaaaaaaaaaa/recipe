@@ -192,7 +192,12 @@ const RECIPE_LIST = [
     "id": "018",
     "name": "親子丼",
     "reading": "おやこどん",
-    "materials": [],
+    "materials": [
+      "玉ねぎ:1個",
+      "ささみ:6〜8本",
+      "たまご:4個",
+      "さやえんどう:適量"
+    ],
     "genre": "和食",
     "favorite": "",
     "methods": [
