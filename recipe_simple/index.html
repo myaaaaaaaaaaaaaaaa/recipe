@@ -17,21 +17,95 @@
   <title>レシピ検索</title>
 
 
-		<div style="text-align: right;">
-			最終更新日　21:32 --2026/01/07 <br>
-			
-			決定回避の法則を加味し、選択肢を減らす<br><br>
-			
-			編集機能、新規追加機能実装
-			追加直後は反映されないので2分くらい待ってCtrl+F5で強制更新してください。<br><br>
-			
-			<a href="update.html">ログ</a>
-			<font size = 6>
-			</font>
-		</div>
-
+	<div id="latest-update-info" style="text-align: right;">
+		最終更新日を読み込み中...
+		<br>
+		<a href="update.html">ログ</a>
+	</div>
 
 <script>
+	// --- ここから修正 ---
+  async function loadLatestUpdate() {
+      try {
+          const response = await fetch('update.html');
+          const text = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+          const cards = Array.from(doc.querySelectorAll('.update-card')).reverse();
+          
+          let major = 1;
+          let minor = 0;
+          let latestVersion = "";
+          let latestFullText = "";
+
+          cards.forEach((card, index) => {
+              if (index !== 0) {
+                  if (card.classList.contains('red-border')) {
+                      major++;
+                      minor = 0;
+                  } else {
+                      minor++;
+                  }
+              }
+              latestVersion = `Ver.${major}.${String(minor).padStart(2, '0')}`;
+              latestFullText = card.querySelector('.update-text').innerText;
+          });
+
+          // 1. 日時と本文の切り分け
+          const parts = latestFullText.trim().split(/\s+/);
+          const timePart = parts[0] || "";
+          const datePart = parts[1] || "";
+          const cleanContent = parts.slice(2).join(' ');
+          const timeDisplay = `${timePart} ${datePart}`.trim();
+
+          const target = document.getElementById('latest-update-info');
+          
+          // 2. スマホ・長文対応のスタイルと構造
+          // インラインCSSで「2行以上は隠す」設定を付与（クリックで解除）
+          target.innerHTML = `
+              <div style="background:#fff; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;">
+                  <span style="font-weight:bold; color:#333;">${latestVersion} / ${timeDisplay}</span><br>
+                  <div id="latest-content-wrapper" style="
+                      font-size:0.9em; 
+                      color:#666; 
+                      margin-top:5px;
+                      display: -webkit-box;
+                      -webkit-box-orient: vertical;
+                      -webkit-line-clamp: 2; /* 2行で省略 */
+                      overflow: hidden;
+                      cursor: pointer;
+                      transition: all 0.3s;
+                  ">
+                      ${cleanContent}
+                  </div>
+					<div style="margin-top:8px; display:flex; justify-content:flex-end; align-items:center; gap: 15px;">
+                      <a href="update.html" style="font-size:0.85em; color:#007bff;">[全履歴を詳しく見る]</a>
+                      <span id="expand-hint" style="font-size:0.75em; color:#999;">(タップで全文表示)</span>
+					</div>
+              </div>
+          `;
+
+          // 3. タップで展開するイベントを追加
+          const wrapper = document.getElementById('latest-content-wrapper');
+          const hint = document.getElementById('expand-hint');
+          wrapper.addEventListener('click', function() {
+              if (this.style.webkitLineClamp === '2') {
+                  this.style.webkitLineClamp = 'unset';
+                  this.style.display = 'block';
+                  hint.innerText = '(タップで閉じる)';
+              } else {
+                  this.style.webkitLineClamp = '2';
+                  this.style.display = '-webkit-box';
+                  hint.innerText = '(タップで全文表示)';
+              }
+          });
+
+      } catch (e) {
+          console.error("更新情報の取得失敗", e);
+      }
+  }
+  loadLatestUpdate();
+  // --- ここまで修正 ---
   (function() {
     const script = document.createElement('script');
     // キャッシュ無効化のためのクエリパラメータ
@@ -1116,6 +1190,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
