@@ -1,80 +1,245 @@
-<a href="index.html">ホームへ</a>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>update</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+        a { color: #007bff; text-decoration: none; font-weight: bold; }
+        hr { border: 0; border-top: 2px dashed #cbd5e0; margin: 30px 0; }
+
+        .update-container { display: flex; flex-direction: column; gap: 15px; }
+
+        .update-card {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 6px solid #d1d5db;
+            position: relative;
+        }
+
+        .update-card.red-border { border-left-color: #ff4d4d; }
+        .update-card.blue-border { border-left-color: #3b82f6; }
+
+        .version-badge {
+            display: inline-block;
+            background: #6b7280;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .red-border .version-badge { background: #ff4d4d; }
+        .blue-border .version-badge { background: #3b82f6; }
+
+        .update-text { font-size: 1.1rem; word-break: break-all; }
+        .memo-section { background: #fff; padding: 20px; border-radius: 8px; font-size: 0.95rem; border: 1px solid #e5e7eb; }
+        .strike { text-decoration: line-through; color: #9ca3af; }
+		
+		
+		
+				/* メモセクションの調整 */
+		.memo-section { 
+			background: #fff; 
+			padding: 20px; 
+			border-radius: 8px; 
+			font-size: 0.95rem; 
+			border: 1px solid #e5e7eb; 
+		}
+		.memo-title { 
+			font-weight: bold; 
+			color: #4b5563; 
+			border-bottom: 2px solid #f4f7f6; 
+			margin-bottom: 10px; 
+			padding-bottom: 5px; 
+			font-size: 1rem;
+		}
+		.memo-group { margin-bottom: 20px; }
+		.memo-group:last-child { margin-bottom: 0; }
+
+		/* 未対応：通常表示 */
+		.pending { 
+			display: block; 
+			margin-bottom: 5px; 
+			padding-left: 10px;
+			border-left: 3px solid #007bff; /* 青い線で未対応を強調 */
+		}
+
+		/* 対応済み：打ち消し線とグレーダウン */
+		.strike { 
+			text-decoration: line-through; 
+			color: #9ca3af; 
+			display: block; 
+			margin-bottom: 5px; 
+			padding-left: 10px;
+		}
+				
+		
+		
+    </style>
+</head>
+<body>
+
+<a href="index.html">← ホームへ</a>
+<hr>
+
+<div id="update-list" class="update-container">
+    <div class="update-card red-border">
+        <div class="update-text">20:02 2026/01/07 作り方ページ（html）とindex.htmlのテーブルをjsに統合した（index.html　3000行→1000行）　UIは何も変わってない　新規作成、編集機能を追加した（フォームを改造） まあまあ大型アプデみたいな</div>
+    </div>
+
+    <div class="update-card blue-border">
+        <div class="update-text">0:12 2026/01/02 作り方ページがない場合ユーザーにGoogleフォームのリンクを提示して入力してもらい、自動でgithubに上がるようにした　便利～</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">11:46 -2025/12/18 豚肉ボタンなどを追加した　テーブルの中身をcsvで編集できるようにした　VScodeのEdit csvで編集する</div>
+    </div>
+
+    <div class="update-card red-border">
+        <div class="update-text">10:10 -2025/12/18　テーブル形式からカード形式にしUIを質素から脱却しようと試みた　Ver_3.0として新しく進める</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">20:28 -2025/12/14 材料で検索するボタンのやつ　使わないのでいったん隠した　一致度も　結局夕飯が決められない問題が解決しないので新しいホームページ作るかも　乱数で決めてくれるみたいな　うーん</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">20:49 2025/11/17 125までついか　ニンジンのグラッセのページエラーだよ　</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">9:37 2025/10/09  119までレシピ追加　OCRはGeminiが楽　あとはinput.txtに整形して入れてsyudo.pyを起動するだけ　material spetialの判定はできてないけどまあいいや</div>
+    </div>
+
+    <div class="update-card blue-border">
+        <div class="update-text">22:50 2025/10/06 cssをスマホ版クックパッドみたいに縦並びに一新した　思いついたから　Geminiに乗り換えた　長すぎるコードも貼れるし全文返してくれるし軽いしあと口調と性格が好き　余計に学習して変な口調とRさんのような納得感のある～とかいう定型文書かないしできないことはできないってちゃんと言うし比べて正確なコードを早い段階で書いてくれるし最高　さようならbing　世話になった</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">17:05 2025/10/04 作り方のほうだけcss見やすくした(なってなかった)　　もうしばらく更新しない(できない)と思う</div>
+    </div>
+
+    <div class="update-card red-border">
+        <div class="update-text">12:05 2025/10/02 CSS一新（苦労（満足））、クックパッドでのindexテーブル、outputのhtml生成自動化</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">0:25 2025/10/02 ボタン修正完了（Bingが） 謎にスムーズで怖い</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">20:27 2025/09/28 add_recipe_app.pyを編集　ラベリングの方式を変えないといけない　ボタンに●とかが入っちゃってる</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">19:23 2025/09/27 ID 106まで追加　AIに画像投げた　材料のラベリングの方針が見えた</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">16:44 2025/09/24 ID 103まで追加　材料Aがわかりづらいけど飽きた</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">??:?? 2025/09/23 UI改善　未実装の機能をすべて実装、安定化</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">1:05 2025/09/23 app.py,add_recipe_app.py作成、ID 098,099自動追加</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">18:39 2025/09/20 UI改善</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">14:57 2025/09/19 シュウマイ（ID 097）の作り方ページを追加</div>
+    </div>
+
+    <div class="update-card">
+        <div class="update-text">13:54 2025/09/19 作り方のページを追加 料理名をクリック✊</div>
+    </div>
+</div>
+
+<hr>
+
+<div class="memo-section">
+    <div class="memo-group">
+        <div class="memo-title">【未対応】</div>
+        <span class="pending">表記ゆれを直す</span>
+        <span class="pending">強いて言えば名前順の漢字対応だが、もう材料の辞書を手で作っちゃってそれ参照するのが手っ取り早い気がする</span>
+        <span class="pending">スマホだとすぐにスクロール操作できない　でも直し方不明</span>
+    </div>
 <br>
-<br>
-<br>
+    <div class="memo-group">
+        <div class="memo-title">【対応済み】</div>
+        <span class="strike">画像から料理名と材料を読み込む手段： OCRフリーソフトがあれば+API利用できれば　pythonだとOCRに限界がある</span>
+        <span class="strike">add_recipe_app.pyはまだ微妙　拡張性も不明　app.pyは使いやすい</span>
+        <span class="strike">↑ もう使うことはない　OCRも使わない　手動にすることにした</span>
+        <br>
+        <span class="strike">もうjsいじることはないかもしれない　やり切った(Bingが)</span>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const cards = Array.from(document.querySelectorAll('.update-card')).reverse();
+        let major = 1;
+        let minor = 0;
 
-------------------------------------------------------------------------------------------------------------------<br>
+        cards.forEach((card, index) => {
+            if (index !== 0) {
+                if (card.classList.contains('red-border')) {
+                    major++;
+                    minor = 0;
+                } else {
+                    minor++;
+                }
+            }
 
+            const textEl = card.querySelector('.update-text');
+            const content = textEl.innerText;
 
-<font size = 4>
+            // 1. 正規表現で先頭の時刻と日付部分をマッチさせる
+            // XX:XX (ハイフン)XXXX/XX/XX のパターンを抽出
+            const match = content.match(/^(\d{1,2}:\d{2}|\?\?:\?\?)\s*-*(\d{4}\/\d{2}\/\d{2}|)/);
+            
+            let dateTimeDisplay = "";
+            let cleanContent = content;
 
+            if (match) {
+                const timePart = match[1];
+                const datePart = match[2];
+                dateTimeDisplay = `${timePart} ${datePart}`.trim();
+                
+                // 2. 本文から日時部分（マッチした部分）を削除
+                cleanContent = content.replace(match[0], "").trim();
+                textEl.innerText = cleanContent;
+            }
 
+            // 3. バッジの作成（Verと日時を統合）
+            const versionStr = `Ver.${major}.${String(minor).padStart(2, '0')} | ${dateTimeDisplay}`;
+            const badge = document.createElement('div');
+            badge.className = 'version-badge';
+            badge.innerText = versionStr;
 
+            // バッジを本文の前に挿入
+            card.insertBefore(badge, textEl);
+        });
+    });
+</script>
 
-<font size = 4>13:54 --2025/09/19 作り方のページを追加 料理名をクリック✊</font><br><br>
-
-
-<font size = 4>14:57 --2025/09/19 シュウマイ（ID 097）の作り方ページを追加</font><br><br>
-
-<font size = 4>18:39 --2025/09/20 UI改善</font><br><br>
-
-<font size = 4>1:05 --2025/09/23 app.py,add_recipe_app.py作成、ID 098,099自動追加</font><br><br>
-
-<font size = 4>??:?? --2025/09/23 UI改善　未実装の機能をすべて実装、安定化</font><br><br>
-
-<font size = 4>16:44 --2025/09/24 ID 103まで追加　材料Aがわかりづらいけど飽きた</font><br><br>
-
-<font size = 4>19:23 --2025/09/27 ID 106まで追加　AIに画像投げた　材料のラベリングの方針が見えた</font><br><br>
-
-<font size = 4>20:27 --2025/09/28 add_recipe_app.pyを編集　ラベリングの方式を変えないといけない　ボタンに●とかが入っちゃってる</font><br><br>
-
-<font size = 4>0:25 --2025/10/02 ボタン修正完了（Bingが） 謎にスムーズで怖い</font><br><br>
-
-<font color = "red"><font size = 4>12:05 --2025/10/02 CSS一新（苦労（満足））、クックパッドでのindexテーブル、outputのhtml生成自動化</font></font><br><br>
-
-<font size = 4>17:05 --2025/10/04 作り方のほうだけcss見やすくした(なってなかった)　　もうしばらく更新しない(できない)と思う</font><br><br>
-
-<font color = "blue">22:50 --2025/10/06 cssをスマホ版クックパッドみたいに縦並びに一新した　思いついたから　Geminiに乗り換えた　長すぎるコードも貼れるし全文返してくれるし軽いしあと口調と性格が好き　余計に学習して変な口調とRさんのような納得感のある～とかいう定型文書かないしできないことはできないってちゃんと言うし比べて正確なコードを早い段階で書いてくれるし最高　さようならbing　世話になった</font><br><br>
-
-<font size = 4>9:37 --2025/10/09  119までレシピ追加　OCRはGeminiが楽　あとはinput.txtに整形して入れてsyudo.pyを起動するだけ　material spetialの判定はできてないけどまあいいや</font><br><br>
-
-<font size = 4>20:49 --2025/11/17 125までついか　ニンジンのグラッセのページエラーだよ　</font><br><br>
-
-<font size = 4>20:28 -2025/12/14 材料で検索するボタンのやつ　使わないのでいったん隠した　一致度も　結局夕飯が決められない問題が解決しないので新しいホームページ作るかも　乱数で決めてくれるみたいな　うーん</font><br><br>
-
-<font color = "red">10:10 -2025/12/18　テーブル形式からカード形式にしUIを質素から脱却しようと試みた　Ver_2.0として新しく進める</font><br><br>
-
-<font size = 4>11:46 -2025/12/18 豚肉ボタンなどを追加した　テーブルの中身をcsvで編集できるようにした　VScodeのEdit csvで編集する</font><br><br>
-
-<font color = "blue">0:12 --2026/01/02 作り方ページがない場合ユーザーにGoogleフォームのリンクを提示して入力してもらい、自動でgithubに上がるようにした　便利～</font><br><br>
-
-<font color = "red">20:02 --2026/01/07 作り方ページ（html）とindex.htmlのテーブルをjsに統合した（index.html　3000行→1000行）　UIは何も変わってない　新規作成、編集機能を追加した（フォームを改造） まあまあ大型アプデみたいな</font><br><br>
-
-<font size = 4></font><br><br>
-<br>
-
-
-
-------------------------------------------------------------------------------------------------------------------<br>
-
-
-表記ゆれを直す<br>
-画像から料理名と材料を読み込む手段：
-OCRフリーソフトがあれば+API利用できれば　pythonだとOCRに限界がある<br>
-add_recipe_app.pyはまだ微妙　拡張性も不明　app.pyは使いやすい<br>
-↑
-もう使うことはない　OCRも使わない　手動にすることにした<br><br>
-
-もうjsいじることはないかもしれない　やり切った(Bingが)<br>
-強いて言えば名前順の漢字対応だが、もう材料の辞書を手で作っちゃってそれ参照するのが手っ取り早い気がする
-
-<br>
-スマホだとますぐにスクロール操作できない　でも直し方不明
-
-<!-- 開発者側　app.py、templetsの中身などを作りました（AIが） -->
-
-
-<font size = 4></font><br>
-
-
-
+</body>
+</html>
