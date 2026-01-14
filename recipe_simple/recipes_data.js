@@ -118,7 +118,7 @@ const RECIPE_LIST = [
   },
   {
     "id": "010",
-    "name": "消された！",
+    "name": "豚キムチ",
     "reading": "",
     "materials": [],
     "genre": "和食",
