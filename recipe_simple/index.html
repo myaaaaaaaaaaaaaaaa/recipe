@@ -1098,7 +1098,7 @@ function initFixedMaterialButtons() {
     const target = containers[1]; 
     if (!target) return;
 
-    const materialList = ['豚肉', '鶏肉', 'ひき肉', '玉ねぎ', 'じゃがいも'];
+    const materialList = ['豚', '鶏', '玉ねぎ', 'じゃがいも'];
     const rows = Array.from(document.querySelectorAll('#recipeTable tbody tr'));
 
     // 🟢 修正点：innerHTML = '' をやめ、お気に入りボタン以外の古い材料ボタンだけを消去する
@@ -1198,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
