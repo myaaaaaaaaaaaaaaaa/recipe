@@ -116,8 +116,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "010",
-    "name": "野菜肉炒め",
-    "reading": "やさいにくいため",
+    "name": "消された！",
+    "reading": "",
     "materials": [],
     "genre": "和食",
     "favorite": "",
@@ -499,9 +499,7 @@ const RECIPE_LIST = [
     "id": "047",
     "name": "冷やし中華",
     "reading": "ひやしちゅうか",
-    "materials": [
-      "豚肉"
-    ],
+    "materials": [],
     "genre": "中華",
     "favorite": "",
     "methods": []
@@ -906,8 +904,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "092",
-    "name": "しゅうまい（玉ねぎ、エノキ、ひき肉をシュウマイの皮で包む）",
-    "reading": "しゅうまい",
+    "name": "消された！",
+    "reading": "",
     "materials": [],
     "genre": "中華",
     "favorite": "",
