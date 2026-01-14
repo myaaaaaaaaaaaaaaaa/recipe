@@ -128,20 +128,14 @@
 <script>
 
 function createNewRecipe() {
-    // 900番台以外の最大IDを探して+1する
-    const validIds = RECIPE_LIST.map(r => parseInt(r.id)).filter(id => id < 900);
-    const lastId = validIds.length > 0 ? Math.max(...validIds) : 0;
-    const nextId = String(lastId + 1).padStart(3, '0');
-
-    if (!window.confirm(`新規レシピ（ID: ${nextId}）を作成しますか？`)) return;
+    // IDの計算ロジックは全て削除します GASで自動的に連番が作られるので
+    if (!window.confirm(`新規レシピを作成しますか？`)) return;
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-    const query = new URLSearchParams();
     
-    // 新規作成時はIDだけを自動入力させる
-    query.append("entry.834953376", nextId);
-
-    window.location.href = `${formBase}?${query.toString()}`;
+    // ID（entry.834953376）のappendを削除し、空の状態でフォームを開く
+    // もしくは名前だけ入力させるならそのパラメータだけ残す
+    window.location.href = formBase;
 }
 
 
@@ -241,52 +235,66 @@ function editThisRecipe(recipeId) {
     if (!recipe) return;
 
     const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-    
     const materials = (recipe.materials || []).join("\n");
     const methods = (recipe.methods || []).join("\n");
 
-    // 1. 全データでURLを作成
     const params = new URLSearchParams();
     params.append("entry.834953376", recipe.id);
     params.append("entry.934654902", recipe.name);
     params.append("entry.1286608741", recipe.reading || "");
-    params.append("entry.1179458958", materials);
-    params.append("entry.811488190", methods);
 
-    let fullUrl = `${formBase}?${params.toString()}`;
+    const fullParams = new URLSearchParams(params);
+    fullParams.append("entry.1179458958", materials);
+    fullParams.append("entry.811488190", methods);
 
-    // 2. 判定と処理
-    if (fullUrl.length > 2000) {
-        // 自動入力が制限される場合：alertを出して強制的に開く
-        const midParams = new URLSearchParams();
-        midParams.append("entry.834953376", recipe.id);
-        midParams.append("entry.934654902", recipe.name);
-        midParams.append("entry.1286608741", recipe.reading || "");
-        midParams.append("entry.1179458958", materials);
+    let finalUrl = `${formBase}?${fullParams.toString()}`;
+
+    // --- 文字数オーバー時の対策 ---
+    if (finalUrl.length > 2000) {
+        // コピー用のテキストを作成
+        const copyText = `【材料】\n${materials}\n\n【作り方】\n${methods}`;
         
-        fullUrl = `${formBase}?${midParams.toString()}`;
+        // ユーザーに状況を伝え、コピーを促す
+        const userAction = window.confirm(
+            "レシピが長文のため、フォームへの自動入力が一部制限されます。\n" +
+            "OKを押すと『コピー用テキスト』を表示します。\n" +
+            "それをコピーして、フォームに貼り付けてください。"
+        );
 
-        if (fullUrl.length > 2000) {
-            alert("材料・作り方が非常に長文のため、自動入力を制限しました。\nID・名前・ふりがなのみ入力された状態で別タブを開きます。");
-            const safeParams = new URLSearchParams();
-            safeParams.append("entry.834953376", recipe.id);
-            safeParams.append("entry.934654902", recipe.name);
-            safeParams.append("entry.1286608741", recipe.reading || "");
-            fullUrl = `${formBase}?${safeParams.toString()}`;
+        if (userAction) {
+            // 画面上にコピー用のエリアを一時的に作成
+            showCopyArea(copyText);
+            
+            // フォームは「ID・名前」だけ入った安全なURLで開く
+            finalUrl = `${formBase}?${params.toString()}`;
         } else {
-            alert("作り方が長文のため、作り方の自動入力をスキップしました。\n材料までは自動入力されています。");
+            return; // キャンセルなら何もしない
         }
     } else {
-        // 全項目自動入力できる場合：confirmでキャンセル可能にする
-        if (!window.confirm(`「${recipe.name}」を編集しますか？\n(別タブでフォームを開きます)`)) {
-            return; // キャンセル時は何もしない
-        }
+        if (!window.confirm(`「${recipe.name}」を編集しますか？`)) return;
     }
 
-    // 最終的なURLを別タブで開く
-    window.open(fullUrl, '_blank');
+    window.open(finalUrl, '_blank');
 }
 
+// コピー用エリアを表示する補助関数
+function showCopyArea(text) {
+    let area = document.getElementById('copyHelpArea');
+    if (!area) {
+        area = document.createElement('div');
+        area.id = 'copyHelpArea';
+        area.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border:3px solid #5cb85c; z-index:9999; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); width:90%; max-width:500px;";
+        document.body.appendChild(area);
+    }
+    area.innerHTML = `
+        <h3 style="margin-top:0;">長文コピー用エリア</h3>
+        <p style="font-size:0.8em; color:#666;">以下の内容をコピーして、フォームの各項目に貼り付けてください。</p>
+        <textarea style="width:100%; height:200px;" readonly>${text}</textarea>
+        <div style="text-align:center; margin-top:10px;">
+            <button onclick="document.getElementById('copyHelpArea').remove()" style="padding:10px 20px;">閉じる</button>
+        </div>
+    `;
+}
 function showMeTheRecipe(recipe) {
     // 既存のコンテンツ（検索窓、テーブル、そして材料ボタンすべて）を隠す
     // ID指定(#)だけでなく、すべての materialButtons を対象にします
@@ -1190,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
