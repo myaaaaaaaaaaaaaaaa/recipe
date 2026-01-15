@@ -906,7 +906,7 @@ const RECIPE_LIST = [
   },
   {
     "id": "092",
-    "name": "消された！",
+    "name": "Deleted Page",
     "reading": "",
     "materials": [],
     "genre": "中華",
