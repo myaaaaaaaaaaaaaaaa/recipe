@@ -951,10 +951,10 @@ const RECIPE_LIST = [
   },
   {
     "id": "092",
-    "name": "Deleted Page",
+    "name": "手作りコロッケ",
     "reading": "",
     "materials": [],
-    "genre": "中華",
+    "genre": "和食",
     "favorite": "",
     "methods": []
   },
