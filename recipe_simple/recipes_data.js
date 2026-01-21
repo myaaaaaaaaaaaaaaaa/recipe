@@ -978,13 +978,13 @@ const RECIPE_LIST = [
   },
   {
     "id": "095",
-    "name": "スパゲティサラダ",
-    "reading": "すぱげてぃさらだ",
+    "name": "削除済み",
+    "reading": "",
     "materials": [],
     "genre": "洋食",
     "favorite": "",
     "methods": [
-      "1.①お湯をわ"
+      ""
     ]
   },
   {
