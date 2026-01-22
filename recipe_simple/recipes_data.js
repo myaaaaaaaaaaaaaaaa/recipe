@@ -969,8 +969,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "094",
-    "name": "春雨のサラダ",
-    "reading": "はるさめのさらだ",
+    "name": "削除済み",
+    "reading": "",
     "materials": [],
     "genre": "中華",
     "favorite": "",
