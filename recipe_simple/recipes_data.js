@@ -933,8 +933,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "090",
-    "name": "ポトフ（具材大き目 ウインナー、ジャガイモ、ニンジン、玉ねぎ）",
-    "reading": "ぽとふ",
+    "name": "削除済み",
+    "reading": "",
     "materials": [],
     "genre": "洋食,汁物",
     "favorite": "",
