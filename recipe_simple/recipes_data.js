@@ -879,8 +879,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "084",
-    "name": "てりやき（鶏むね肉）",
-    "reading": "てりやき（とりむねにく）",
+    "name": "削除済み",
+    "reading": "",
     "materials": [],
     "genre": "和食",
     "favorite": "",
