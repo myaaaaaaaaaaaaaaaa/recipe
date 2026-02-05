@@ -162,8 +162,8 @@ const RECIPE_LIST = [
   },
   {
     "id": "011",
-    "name": "肉じゃが",
-    "reading": "にくじゃが",
+    "name": "削除済み",
+    "reading": "",
     "materials": [],
     "genre": "和食",
     "favorite": "",
