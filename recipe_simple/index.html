@@ -129,15 +129,99 @@
 <script>
 
 function createNewRecipe() {
-    // IDの計算ロジックは全て削除します GASで自動的に連番が作られるので
-    if (!window.confirm(`新規レシピを作成しますか？`)) return;
+    const newName = window.prompt("作成したいレシピ名を入力してください");
+    if (!newName || newName.trim() === "") return;
 
-    const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-    
-    // ID（entry.834953376）のappendを削除し、空の状態でフォームを開く
-    // もしくは名前だけ入力させるならそのパラメータだけ残す
-    window.location.href = formBase;
+    const trimmedName = newName.trim();
+    const normalize = (str) => {
+        return str.replace(/[ァ-ン]/g, s => String.fromCharCode(s.charCodeAt(0) - 0x60))
+                  .replace(/[の・、。！!？?\s（）( )をとしたり]/g, "");
+    };
+    const getBigrams = (str) => {
+        const bigrams = new Set();
+        for (let i = 0; i < str.length - 1; i++) bigrams.add(str.substring(i, i + 2));
+        return bigrams;
+    };
+
+    const searchTarget = normalize(trimmedName);
+    const targetBigrams = getBigrams(searchTarget);
+
+    const similarRecipes = RECIPE_LIST.filter(r => {
+        const targetName = normalize(r.name);
+        if (targetName.includes(searchTarget) || searchTarget.includes(targetName)) return true;
+        const compareBigrams = getBigrams(targetName);
+        let matchCount = 0;
+        targetBigrams.forEach(bg => { if (compareBigrams.has(bg)) matchCount++; });
+        return (matchCount / Math.max(compareBigrams.size, 1)) >= 0.3;
+    });
+
+    if (similarRecipes.length > 0) {
+        // 自作のダイアログを表示
+        showSimilarityDialog(similarRecipes, trimmedName);
+    } else {
+        // 似たものがなければそのままフォームへ
+        goToGoogleForm(trimmedName);
+    }
 }
+
+// フォームへ飛ばす共通処理
+function showSimilarityDialog(recipes, originalName) {
+    // 既存のダイアログとオーバーレイがあれば削除
+    const removeDialog = () => {
+        const d = document.getElementById('similarity-dialog');
+        const o = document.getElementById('dialog-overlay');
+        if (d) d.remove();
+        if (o) o.remove();
+        // 背後のスクロール禁止を解除
+        document.body.style.overflow = '';
+    };
+
+    removeDialog();
+
+    // 背景を暗くするオーバーレイ
+    const overlay = document.createElement('div');
+    overlay.id = 'dialog-overlay';
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;";
+    overlay.onclick = removeDialog; // 背景クリックで両方消す
+
+    const dialog = document.createElement('div');
+    dialog.id = 'similarity-dialog';
+    // スクロール範囲外の挙動を止めるため、ダイアログ内でのタッチ移動を制御
+    dialog.style = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: white; padding: 25px; border-radius: 12px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.3); z-index: 10000;
+        width: 90%; max-width: 450px; font-size: 16px;
+        overscroll-behavior: contain; /* 背後のスクロールを防ぐ */
+    `;
+
+    // 候補リストの作成
+    let recipeLinks = recipes.map(r => `
+        <div onclick="goToRecipeDetail('${r.id}'); document.getElementById('dialog-overlay').click();" 
+             style="padding: 12px; margin: 8px 0; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; color: #007bff; font-weight: bold;">
+            [ID: ${r.id}] ${r.name} ➔
+        </div>
+    `).join('');
+
+    dialog.innerHTML = `
+        <h3 style="margin-top:0; color:#d9534f;">似たレシピが見つかりました</h3>
+        <p style="font-size:0.9em; color:#666;">これらは既に登録されています。</p>
+        <div style="max-height: 250px; overflow-y: auto; margin: 15px 0; overscroll-behavior: contain; border-bottom: 1px solid #eee; border-top: 1px solid #eee;">
+            ${recipeLinks}
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            <button onclick="document.getElementById('dialog-overlay').click();" style="background:#eee; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer;">閉じる</button>
+            <button onclick="goToGoogleForm('${originalName}')" style="background:#5cb85c; color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer;">新規登録する</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(dialog);
+
+    // 背後のスクロールを禁止
+    document.body.style.overflow = 'hidden';
+}
+
 
 
 
@@ -445,6 +529,26 @@ h1 {
   margin-bottom: 30px;
   color: #444;
   font-size: 2em;
+}
+
+
+
+/* 未登録のカードを少し目立たなくし、点線枠にする */
+#recipeTable tr.is-empty {
+    border: 1px dashed #ffcc66;
+    background-color: #fffdf5;
+}
+
+/* 募集中バッジの見た目 */
+.status-badge {
+    display: inline-block;
+    background: #f0ad4e;
+    color: white;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    vertical-align: middle;
 }
 
 
@@ -1237,24 +1341,33 @@ function renderRecipes() {
   tbody.innerHTML = ""; 
 
   RECIPE_LIST.forEach(r => {
+    // 材料と作り方の両方が揃っている場合のみ「完成」とみなす
+    const isComplete = (r.materials && r.materials.length > 0) && 
+                       (r.methods && r.methods.length > 0);
+    
+    const rowClass = isComplete ? 'is-complete' : 'is-empty';
+    const badge = isComplete ? '' : '<span class="status-badge">レシピ募集中</span>';
+
     const tr = document.createElement('tr');
     tr.dataset.id = r.id;
+    tr.className = rowClass;
+
     tr.innerHTML = `
       <td>${r.id}</td>
       <td class="recipe-name">
+        ${badge} 
         <a href="javascript:void(0);" onclick="goToRecipeDetail('${r.id}')">${r.name}</a>
         <span class="hidden-reading">${r.reading || ''}</span>
       </td>
       <td>${r.materials.map(m => `<span class="material">${m}</span>`).join('')}</td>
       <td data-genre="${r.genre}">${r.genre}</td>
       <td>
-        <img id="img${r.id}" src="images/${r.id}.jpg" alt="料理画像" onerror="this.src='images/NO_NAME.jpg'">
+        <img id="img${r.id}" src="images/${r.id}.jpg" alt="料理画像" onerror="this.src='images/NO_NAME.jpg'" ${!isComplete ? 'style="opacity:0.6;"' : ''}>
       </td>
       <td>${r.favorite || ''}</td>
       <td class="match-rate"></td>
     `;
     
-    // 行全体をクリックした時も同じ関数を呼ぶ
     tr.onclick = (e) => {
       if (e.target.tagName !== 'A') {
         goToRecipeDetail(r.id);
