@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -129,6 +130,24 @@
 <script>
 
 function createNewRecipe() {
+    // 1. IDの自動計算（4連続する連番の末尾を探して+1する）
+	// IDの自動計算
+	const ids = RECIPE_LIST.map(r => parseInt(r.id)).filter(id => !isNaN(id)).sort((a, b) => a - b);
+	let nextId = 1;
+	if (ids.length > 0) {
+		let maxSequentialId = ids[0];
+		let consecutiveCount = 1;
+		for (let i = 1; i < ids.length; i++) {
+			if (ids[i] === ids[i - 1] + 1) {
+				consecutiveCount++;
+				if (consecutiveCount >= 4) maxSequentialId = ids[i];
+			} else {
+				consecutiveCount = 1;
+			}
+		}
+		nextId = (maxSequentialId || ids[ids.length - 1]) + 1;
+	}
+
     const newName = window.prompt("作成したいレシピ名を入力してください");
     if (!newName || newName.trim() === "") return;
 
@@ -155,17 +174,58 @@ function createNewRecipe() {
         return (matchCount / Math.max(compareBigrams.size, 1)) >= 0.3;
     });
 
-    if (similarRecipes.length > 0) {
-        // 自作のダイアログを表示
-        showSimilarityDialog(similarRecipes, trimmedName);
+	if (similarRecipes.length > 0) {
+		showSimilarityDialog(similarRecipes, trimmedName, nextId);
+	} else {
+		const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
+		const params = new URLSearchParams();
+		params.append("entry.834953376", nextId);
+		params.append("entry.934654902", trimmedName);
+		window.open(`${formBase}?${params.toString()}`, '_blank');
+	}
+
+}
+
+
+
+// --- 1. 詳細表示と遷移のロジック ---
+
+function goToRecipeDetail(recipeId) {
+    const recipe = RECIPE_LIST.find(r => r.id === recipeId);
+    if (!recipe) return;
+
+    const hasSomeContent = (recipe.materials && recipe.materials.length > 0) || 
+                           (recipe.methods && recipe.methods.length > 0);
+
+    if (hasSomeContent) {
+        // ★レシピがある場合：リストを隠してから詳細を表示
+        const d = document.getElementById('similarity-dialog');
+        const o = document.getElementById('dialog-overlay');
+        if (d) d.style.display = 'none';
+        if (o) o.style.display = 'none';
+		
+		document.body.style.overflow = '';
+        
+        showMeTheRecipe(recipe); 
     } else {
-        // 似たものがなければそのままフォームへ
-        goToGoogleForm(trimmedName);
+        // ★レシピがない場合：確認を出す。キャンセルしてもリストは表示されたまま
+        const message = `「${recipe.name}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
+        if (window.confirm(message)) {
+            const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
+            const params = new URLSearchParams();
+            params.append("entry.834953376", recipe.id);
+            params.append("entry.934654902", recipe.name);
+            params.append("entry.1286608741", recipe.reading || "");
+            window.open(`${formBase}?${params.toString()}`, '_blank'); // 別タブで開く
+        }
     }
 }
 
+
+
+
 // フォームへ飛ばす共通処理
-function showSimilarityDialog(recipes, originalName) {
+function showSimilarityDialog(recipes, originalName, nextId) {
     // 既存のダイアログとオーバーレイがあれば削除
     const removeDialog = () => {
         const d = document.getElementById('similarity-dialog');
@@ -174,6 +234,8 @@ function showSimilarityDialog(recipes, originalName) {
         if (o) o.remove();
         // 背後のスクロール禁止を解除
         document.body.style.overflow = '';
+		
+		
     };
 
     removeDialog();
@@ -182,7 +244,7 @@ function showSimilarityDialog(recipes, originalName) {
     const overlay = document.createElement('div');
     overlay.id = 'dialog-overlay';
     overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;";
-    overlay.onclick = removeDialog; // 背景クリックで両方消す
+    //overlay.onclick = removeDialog; // 背景クリックで両方消す処理はいらん
 
     const dialog = document.createElement('div');
     dialog.id = 'similarity-dialog';
@@ -209,10 +271,10 @@ function showSimilarityDialog(recipes, originalName) {
         <div style="max-height: 250px; overflow-y: auto; margin: 15px 0; overscroll-behavior: contain; border-bottom: 1px solid #eee; border-top: 1px solid #eee;">
             ${recipeLinks}
         </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-            <button onclick="document.getElementById('dialog-overlay').click();" style="background:#eee; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer;">閉じる</button>
-            <button onclick="goToGoogleForm('${originalName}')" style="background:#5cb85c; color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer;">新規登録する</button>
-        </div>
+		<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+			<button onclick="const d=document.getElementById('similarity-dialog'); const o=document.getElementById('dialog-overlay'); if(d)d.remove(); if(o)o.remove(); document.body.style.overflow='';" style="background:#eee; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer;">閉じる</button>
+			<button onclick="const formBase='https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform'; const params=new URLSearchParams(); params.append('entry.834953376', '${nextId}'); params.append('entry.934654902', '${originalName}'); window.open(formBase + '?' + params.toString(), '_blank'); const d=document.getElementById('similarity-dialog'); const o=document.getElementById('dialog-overlay'); if(d)d.remove(); if(o)o.remove(); document.body.style.overflow='';" style="background:#5cb85c; color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer;">新規登録する</button>
+		</div>
     `;
 
     document.body.appendChild(overlay);
@@ -225,37 +287,6 @@ function showSimilarityDialog(recipes, originalName) {
 
 
 
-
-// --- 1. 詳細表示と遷移のロジック ---
-
-function goToRecipeDetail(recipeId) {
-    const recipe = RECIPE_LIST.find(r => r.id === recipeId);
-    if (!recipe) return;
-
-    const hasSomeContent = (recipe.materials && recipe.materials.length > 0) || 
-                           (recipe.methods && recipe.methods.length > 0);
-
-    if (hasSomeContent) {
-        // ★レシピがある場合：リストを隠してから詳細を表示
-        const d = document.getElementById('similarity-dialog');
-        const o = document.getElementById('dialog-overlay');
-        if (d) d.style.display = 'none';
-        if (o) o.style.display = 'none';
-        
-        showMeTheRecipe(recipe); 
-    } else {
-        // ★レシピがない場合：確認を出す。キャンセルしてもリストは表示されたまま
-        const message = `「${recipe.name}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
-        if (window.confirm(message)) {
-            const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-            const params = new URLSearchParams();
-            params.append("entry.834953376", recipe.id);
-            params.append("entry.934654902", recipe.name);
-            params.append("entry.1286608741", recipe.reading || "");
-            window.open(`${formBase}?${params.toString()}`, '_blank'); // 別タブで開く
-        }
-    }
-}
 
 
 // --- レシピ詳細表示機能 ---
@@ -316,25 +347,29 @@ function showMeTheRecipe(recipe) {
     window.scrollTo(0, 0);
 }
 
-// 317行目付近：backToSearch 関数を書き換え
 function backToSearch() {
     // 1. 詳細エリアを隠す
     const detailArea = document.getElementById('recipeDetailArea');
     if (detailArea) detailArea.style.display = 'none';
 
-    // ★リストを再表示
+    // 2. リストを再表示
     const d = document.getElementById('similarity-dialog');
     const o = document.getElementById('dialog-overlay');
-    if (d) d.style.display = 'block';
-    if (o) o.style.display = 'block';
+    
+    // ダイアログ要素自体が残っているなら、再表示してロックをかける
+    if (d && o) {
+        d.style.display = 'block';
+        o.style.display = 'block';
+        document.body.style.overflow = 'hidden'; 
+    }
 
-    // 2. 他の要素を表示に戻す（ここは既存の通り）
+    // 3. 他のメイン要素を元に戻す
     const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection', '.view-switches'];
     mainSelectors.forEach(selector => {
         const els = document.querySelectorAll(selector);
-        els.forEach(el => el.style.display = ''); 
+        els.forEach(el => el.style.setProperty('display', '', 'important'));
     });
-    
+
     document.querySelectorAll('#materialButtons').forEach(el => {
         el.style.display = '';
     });
