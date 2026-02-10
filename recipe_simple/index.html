@@ -196,12 +196,12 @@ function showSimilarityDialog(recipes, originalName) {
     `;
 
     // 候補リストの作成
-    let recipeLinks = recipes.map(r => `
-        <div onclick="goToRecipeDetail('${r.id}'); document.getElementById('dialog-overlay').click();" 
-             style="padding: 12px; margin: 8px 0; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; color: #007bff; font-weight: bold;">
-            [ID: ${r.id}] ${r.name} ➔
-        </div>
-    `).join('');
+	let recipeLinks = recipes.map(r => `
+		<div onclick="goToRecipeDetail('${r.id}')" 
+			 style="padding: 12px; margin: 8px 0; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; color: #007bff; font-weight: bold;">
+			[ID: ${r.id}] ${r.name} ➔
+		</div>
+	`).join('');
 
     dialog.innerHTML = `
         <h3 style="margin-top:0; color:#d9534f;">似たレシピが見つかりました</h3>
@@ -232,26 +232,27 @@ function goToRecipeDetail(recipeId) {
     const recipe = RECIPE_LIST.find(r => r.id === recipeId);
     if (!recipe) return;
 
-    // 判定基準を「材料または作り方が存在する」に変更
     const hasSomeContent = (recipe.materials && recipe.materials.length > 0) || 
                            (recipe.methods && recipe.methods.length > 0);
 
     if (hasSomeContent) {
-        // 何かしらデータがあれば詳細画面へ（ここでふりがな等が表示されます）
+        // ★レシピがある場合：リストを隠してから詳細を表示
+        const d = document.getElementById('similarity-dialog');
+        const o = document.getElementById('dialog-overlay');
+        if (d) d.style.display = 'none';
+        if (o) o.style.display = 'none';
+        
         showMeTheRecipe(recipe); 
     } else {
-        // 完全に空っぽの場合のみフォームへ
+        // ★レシピがない場合：確認を出す。キャンセルしてもリストは表示されたまま
         const message = `「${recipe.name}」の内容はまだ登録されていません。\nレシピ提供フォームへ移動しますか？`;
         if (window.confirm(message)) {
             const formBase = "https://docs.google.com/forms/d/e/1FAIpQLSeq_8AMcuIM-8O50UnBT1Dp-VBzQBhpE1NI1hI10CpieTcnIQ/viewform";
-            
-            // フォームへ飛ばす際、既にある情報（ID, 名前, ふりがな）をパラメータに載せる
             const params = new URLSearchParams();
             params.append("entry.834953376", recipe.id);
             params.append("entry.934654902", recipe.name);
-            params.append("entry.1286608741", recipe.reading || ""); // ふりがなを送る
-
-            window.location.href = `${formBase}?${params.toString()}`;
+            params.append("entry.1286608741", recipe.reading || "");
+            window.open(`${formBase}?${params.toString()}`, '_blank'); // 別タブで開く
         }
     }
 }
@@ -260,7 +261,7 @@ function goToRecipeDetail(recipeId) {
 // --- レシピ詳細表示機能 ---
 function showMeTheRecipe(recipe) {
     // 1. 既存のメインコンテンツをすべて非表示にする
-    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection', '.view-switches'];
     mainSelectors.forEach(selector => {
         const el = document.querySelector(selector);
         if (el) el.style.display = 'none';
@@ -284,7 +285,7 @@ function showMeTheRecipe(recipe) {
     detailArea.innerHTML = `
         <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
             <div style="margin-bottom: 20px; overflow: hidden;">
-                <button onclick="location.reload()" style="padding: 10px 15px; cursor: pointer;">← 検索に戻る</button>
+                <button onclick="backToSearch()" style="padding: 10px 15px; cursor: pointer;">← 検索に戻る</button>
                 <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">このレシピを編集する</button>
             </div>
             
@@ -315,27 +316,31 @@ function showMeTheRecipe(recipe) {
     window.scrollTo(0, 0);
 }
 
+// 317行目付近：backToSearch 関数を書き換え
 function backToSearch() {
     // 1. 詳細エリアを隠す
     const detailArea = document.getElementById('recipeDetailArea');
     if (detailArea) detailArea.style.display = 'none';
 
-    // 2. 隠していた要素をすべて表示に戻す
-    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    // ★リストを再表示
+    const d = document.getElementById('similarity-dialog');
+    const o = document.getElementById('dialog-overlay');
+    if (d) d.style.display = 'block';
+    if (o) o.style.display = 'block';
+
+    // 2. 他の要素を表示に戻す（ここは既存の通り）
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection', '.view-switches'];
     mainSelectors.forEach(selector => {
         const els = document.querySelectorAll(selector);
-        els.forEach(el => el.style.display = ''); // displayを元に戻す
+        els.forEach(el => el.style.display = ''); 
     });
     
-    // 材料ボタンも再表示
     document.querySelectorAll('#materialButtons').forEach(el => {
         el.style.display = '';
     });
 
-    // 3. 保存しておいた位置にスクロールを戻す
     window.scrollTo(0, lastScrollY);
 }
-
 
 
 function editThisRecipe(recipeId) {
@@ -407,20 +412,21 @@ function showCopyArea(text) {
 let lastScrollY = 0; // スクロール位置を保存する変数
 
 function showMeTheRecipe(recipe) {
-	lastScrollY = window.scrollY;
-    // 既存のコンテンツ（検索窓、テーブル、そして材料ボタンすべて）を隠す
-    // ID指定(#)だけでなく、すべての materialButtons を対象にします
-    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    lastScrollY = window.scrollY;
+
+    // 1. 画面上の要素をまとめて非表示にする（列切り替えボタン '.view-switches' を追加）
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection', '.view-switches'];
     mainSelectors.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el) el.style.display = 'none';
+        const els = document.querySelectorAll(selector);
+        els.forEach(el => el.style.setProperty('display', 'none', 'important'));
     });
 
-    // IDが重複している「材料ボタン」をすべて非表示にする
+    // 2. 材料ボタンもすべて非表示
     document.querySelectorAll('#materialButtons').forEach(el => {
         el.style.display = 'none';
     });
 
+    // 3. 詳細エリアの表示準備
     let detailArea = document.getElementById('recipeDetailArea');
     if (!detailArea) {
         detailArea = document.createElement('div');
@@ -429,14 +435,7 @@ function showMeTheRecipe(recipe) {
     }
     detailArea.style.display = 'block';
 
-
-
-
-
-
-
-
-    // 修正ポイント：src属性をバッククォートで囲む
+    // 4. HTMLの組み立て
     detailArea.innerHTML = `
         <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px;">
             <button onclick="backToSearch()" style="padding: 10px 15px; cursor: pointer;">← 検索に戻る</button>
