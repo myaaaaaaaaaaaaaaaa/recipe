@@ -231,6 +231,29 @@ function showMeTheRecipe(recipe) {
     window.scrollTo(0, 0);
 }
 
+function backToSearch() {
+    // 1. 詳細エリアを隠す
+    const detailArea = document.getElementById('recipeDetailArea');
+    if (detailArea) detailArea.style.display = 'none';
+
+    // 2. 隠していた要素をすべて表示に戻す
+    const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
+    mainSelectors.forEach(selector => {
+        const els = document.querySelectorAll(selector);
+        els.forEach(el => el.style.display = ''); // displayを元に戻す
+    });
+    
+    // 材料ボタンも再表示
+    document.querySelectorAll('#materialButtons').forEach(el => {
+        el.style.display = '';
+    });
+
+    // 3. 保存しておいた位置にスクロールを戻す
+    window.scrollTo(0, lastScrollY);
+}
+
+
+
 function editThisRecipe(recipeId) {
     const recipe = RECIPE_LIST.find(r => r.id === recipeId);
     if (!recipe) return;
@@ -296,7 +319,11 @@ function showCopyArea(text) {
         </div>
     `;
 }
+
+let lastScrollY = 0; // スクロール位置を保存する変数
+
 function showMeTheRecipe(recipe) {
+	lastScrollY = window.scrollY;
     // 既存のコンテンツ（検索窓、テーブル、そして材料ボタンすべて）を隠す
     // ID指定(#)だけでなく、すべての materialButtons を対象にします
     const mainSelectors = ['h1', '.search-box', '#recipeTable', '.sort-buttons', '#materialSection'];
@@ -320,10 +347,15 @@ function showMeTheRecipe(recipe) {
 
 
 
+
+
+
+
+
     // 修正ポイント：src属性をバッククォートで囲む
     detailArea.innerHTML = `
         <div style="padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 8px;">
-            <button onclick="location.reload()">← 検索に戻る</button>
+            <button onclick="backToSearch()" style="padding: 10px 15px; cursor: pointer;">← 検索に戻る</button>
             <button onclick="editThisRecipe('${recipe.id}')" style="float:right; background:#ffcc66;">編集する</button>
             
             <h1>${recipe.name}</h1>
@@ -562,7 +594,18 @@ button:hover {
 #recipeTable tr.hidden { display: none !important; }
 
 @media (max-width: 600px) {
-  #recipeTable tbody { grid-template-columns: 1fr; }
+  #recipeTable tbody {
+    /* calcを使わず、1fr 1fr（均等に2分割）に固定します */
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; /* 隙間を詰める */
+    padding: 10px; /* 全体の余白を調整 */
+    width: 100%; /* 親要素からはみ出さないように固定 */
+  }
+
+  #recipeTable tr {
+    width: 100%; /* カード自体の幅を100%に */
+    min-width: 0; /* grid内での突き抜け防止 */
+  }
 }
 
 
@@ -786,6 +829,10 @@ button:hover {
     gap: 8px;
     /* grid設定をflexで上書きして、よりシンプルなレイアウトに */
   }
+  
+  
+  
+  
 }
 </style>
   
@@ -812,6 +859,14 @@ button:hover {
   <button id="sortRecipesById">ID順</button>
   <button id="sortRecipesByName">料理名順</button>
 </div>
+
+<div class="view-switches" style="margin-bottom: 10px; display: flex; gap: 8px;">
+    <button id="view-2col" onclick="changeView(2)">2列表示</button>
+    <button id="view-4col" onclick="changeView(4)" class="selected">4列表示</button>
+</div>
+
+
+
 
 
 
@@ -867,6 +922,32 @@ button:hover {
 
 
 <script>
+
+function changeView(cols) {
+    const tbody = document.querySelector('#recipeTable tbody');
+    if (!tbody) return;
+
+    // ボタンの見た目（selectedクラス）を切り替え
+    document.getElementById('view-2col').classList.remove('selected');
+    document.getElementById('view-4col').classList.remove('selected');
+    document.getElementById(`view-${cols}col`).classList.add('selected');
+
+    // 列数を直接書き換え
+    if (cols === 2) {
+        tbody.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    } else {
+        tbody.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    }
+}
+
+
+
+
+
+
+
+
+
   let materialSortMode = 'count'; // 材料ボタンの並び順（出現回数 or 名前）
   let currentSortMode = 'id';      // レシピの並び順（id or name）
 
